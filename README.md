@@ -10,4 +10,9 @@ BeatCatcher is a rhythm game with simple mechanics. In this game, you get to cho
 2. Open the `.exe` file, specify the folder in which you want the game to be saved, then press **Extract*. A folder named `dist` will appear at the specified location.
 3. Go to `dist`, then run `launch.bat`, wait until the game window appear, then you're ready to go!<br>
 
-:warning:**NOTE: On the first run, it might take a few seconds before the game starts loading its assets and libraries.**
+:warning: **NOTE: On the first run, it might take a few seconds before the game starts loading its assets and libraries.**
+
+### How to play
+1. Click on the :arrow_forward:	**Play button**, then choose a song from your music library.<br>
+:information_source: This game natively supports `.wav` files. Non-WAV files are automatically converted using `ffmpeg` (already bundled with the game)
+2. Throughout the game, notes will fall from above in tune with the rhythm of the song. 
