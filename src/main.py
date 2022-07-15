@@ -1,29 +1,19 @@
 import os
 import pygame
 
-print("Importing utils...")
-from utils import cleanup, randomRange, textWrap
-
-#from entities import AudioAnalyzer, LargeNote, Pad, PauseCountdown, PauseMenu, ScoreDisp, SmallNote, Effect
-print("Importing filedialog...")
-import tkinter.filedialog
-print("Importing random...")
-import random
-print("Importing custom types...")
-from customTypes import Part, ExitReason, PauseState, HitState
-
 pygame.init()
 pygame.display.init()
+
 
 def helpPage():
     print("Importing constants...")
     from common import WIN_W, WIN_H, WHITE_TEXT, FPS, PAUSE_BACKGROUND, FONT2, HELP_TEXT, GUIDE_TITLE, MAIN_MENU_BG, HELP_IMG, TAP_PROMPT
     
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWSURFACE)
+    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL | pygame.DOUBLEBUF)
     clock = pygame.time.Clock()
 
     # dark overlay
-    darkOverlay = pygame.image.load(PAUSE_BACKGROUND)
+    darkOverlay = PAUSE_BACKGROUND
     font = pygame.font.Font(FONT2, 20)
 
     texts = HELP_TEXT
@@ -41,11 +31,11 @@ def helpPage():
                     return None
         display.blit(MAIN_MENU_BG, (0, 0))
         display.blit(darkOverlay, (0, 0))
-        display.blit(GUIDE_TITLE, ((WIN_W - guideTitleRect.width) / 2, 20))
+        display.blit(GUIDE_TITLE, ((WIN_W - GUIDE_TITLE.get_width()) / 2, 20))
         
         # generate rect for image and text
         helpImgRect = HELP_IMG[page].get_rect()
-        display.blit(HELP_IMG[page], ((WIN_W - helpImgRect.width) / 2, guideTitleRect.height + 30))
+        display.blit(HELP_IMG[page], ((WIN_W - HELP_IMG[page].get_width()) / 2, guideTitleRect.height + 30))
         
 
         _t = texts[page].split("|")
@@ -57,12 +47,13 @@ def helpPage():
 
         display.blit(TAP_PROMPT, ((WIN_W - TAP_PROMPT.get_width()) / 2, WIN_H - TAP_PROMPT.get_height() - 4))
         pygame.display.flip()
-        clock.tick(FPS)
+        clock.tick()
     
 def licensePage():
     print("Importing constants...")
     from common import WIN_W, WIN_H, FONT2, PAUSE_BACKGROUND, VERSION_STRING, WHITE_TEXT, MENU_TITLE, LINK_COLOR, CWD, THIRD_PARTY_LIBS_LICENSE, ATTRIBUTION_TEXT, BACKGROUND_IMAGE, TAP_PROMPT, FPS, LICENSE
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWSURFACE)
+    from utils import textWrap
+    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL | pygame.DOUBLEBUF)
     clock = pygame.time.Clock()
     font = pygame.font.Font(FONT2, 22)
     font2 = pygame.font.Font(FONT2, 22)
@@ -71,7 +62,7 @@ def licensePage():
 
 
     # dark overlay
-    darkOverlay = pygame.image.load(PAUSE_BACKGROUND)
+    darkOverlay = PAUSE_BACKGROUND
 
     # game info
     name = font.render(f"BeatCatcher v{VERSION_STRING}", True, WHITE_TEXT)
@@ -132,60 +123,36 @@ def licensePage():
         clock.tick(FPS)
 def mainMenu():
     print("Importing constants....")
-    from common import WIN_W, WIN_H, MENU_TITLE, RESUME_BTN, INFO_BTN, HELP_BTN, PAUSE_BACKGROUND, LOADING_ICON, MAIN_MENU_BG, FPS, MUSIC_FOLDER
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWSURFACE)
-    clock = pygame.time.Clock()
+    from common import WIN_W, WIN_H, PAUSE_BACKGROUND, LOADING_ICON, FPS, MUSIC_FOLDER
+    import tkinter.filedialog
+    print("Importing MainMenu module")
+    from entities import MainMenu
+    from customTypes import Part
     
-    #title
-    titleRect = MENU_TITLE.get_rect()
-
-    #play btn
-    playBtn = pygame.transform.smoothscale(pygame.image.load(RESUME_BTN), (200, 200))
-    playBtnRect = playBtn.get_rect()
-
-    #info btn
-    infoBtn = pygame.transform.smoothscale(pygame.image.load(INFO_BTN), (50, 50))
-    infoBtnRect = infoBtn.get_rect()
-
-    #help btn
-    helpBtn = pygame.transform.smoothscale(pygame.image.load(HELP_BTN), (50, 50))
-    helpBtnRect = helpBtn.get_rect()
-
-    # dark overlay
-    dark_overlay = pygame.image.load(PAUSE_BACKGROUND)
-
-    # loading icon
-    loadingIconRect = LOADING_ICON.get_rect()
+    _mainMenu = MainMenu()
+    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL)
+    clock = pygame.time.Clock()
     while True:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 return None, Part.Exit
             elif e.type == pygame.MOUSEBUTTONDOWN:
                 mousePos = pygame.mouse.get_pos()
-                if playBtnRect.collidepoint(mousePos):
+                if _mainMenu.playBtnRect.collidepoint(mousePos):
                     f = tkinter.filedialog.askopenfilename(title = "Select a song to play...", initialdir=MUSIC_FOLDER)
                     if f == "" or f == None:
                         pass
                     else:
-                        display.blit(dark_overlay, (0, 0))
-                        display.blit(dark_overlay, (0, 0))
-                        display.blit(LOADING_ICON, ((WIN_W - loadingIconRect.width) / 2, (WIN_H - loadingIconRect.height) / 2))
+                        display.blit(PAUSE_BACKGROUND, (0, 0))
+                        display.blit(LOADING_ICON, ((WIN_W - LOADING_ICON.get_width()) / 2, (WIN_H - LOADING_ICON.get_width()) / 2))
                         pygame.display.flip()
                         return f, Part.Play
-                elif helpBtnRect.collidepoint(mousePos):
+                elif _mainMenu.helpBtnRect.collidepoint(mousePos):
                     return None, Part.Help
-                elif infoBtnRect.collidepoint(mousePos):
+                elif _mainMenu.aboutBtnRect.collidepoint(mousePos):
                     return None, Part.About
-        display.blit(MAIN_MENU_BG, (0, 0))
-        display.blit(MENU_TITLE, ((WIN_W - titleRect.width) / 2, 40))
-        display.blit(playBtn, ((WIN_W - playBtnRect.width) / 2, 240))
-        display.blit(infoBtn, (30, WIN_H - 20 - infoBtnRect.height))
-        display.blit(helpBtn, (60 + helpBtnRect.width, WIN_H - 20 - helpBtnRect.height))
         
-        playBtnRect.topleft = ((WIN_W - playBtnRect.width) / 2, 240)
-        infoBtnRect.topleft = (30, WIN_H - 20 - infoBtnRect.height)
-        helpBtnRect.topleft = (60 + helpBtnRect.width, WIN_H - 20 - helpBtnRect.height)
-
+        _mainMenu.show(display)
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -193,28 +160,30 @@ def analyze(f):
     print("Loading analyzer...")
     from entities import AudioAnalyzer
     audioObj = AudioAnalyzer(f)
-    duration, songName = audioObj.loadIntoLibrosa()
+    songName = audioObj.loadIntoLibrosa()
     noteStartList = audioObj.detectNotes()
     smallNoteStartList = audioObj.detectSmallNotes()
 
     # chorus detection feature will be implemented in the future
     chorusStartTime = None
     
-    audioObj.createPygameMixerObj()
     bpm = audioObj.calcBPM()
 
-    return duration, songName, noteStartList, smallNoteStartList, chorusStartTime, bpm
+    return songName, noteStartList, smallNoteStartList, chorusStartTime, bpm
 
-def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
+def session(f, songName, noteStartList, smallNoteStartList, bpm):
     print("Loading constants...")
-    from common import WIN_W, WIN_H, PAD_Y_POS, SPEED_MULTIPLIER, FONT, FONT2, LOADING_ICON, PAUSE_BACKGROUND, BACKGROUND_IMAGE, FPS, WHITE_TEXT
+    from common import WIN_W, WIN_H, PAD_Y_POS, SPEED_MULTIPLIER, FONT, FONT2, LOADING_ICON, PAUSE_BACKGROUND, BACKGROUND_IMAGE, FPS, WHITE_TEXT, LARGE_NOTE_SPRITE
+    from common import HP_DEPLETION_RATE, LINK_COLOR
     print("Loading entities...")
-    from entities import LargeNote, SmallNote, PauseMenu, PauseCountdown, Pad, Effect, ScoreDisp
+    from entities import LargeNote, SmallNote, PauseMenu, PauseCountdown, Pad, Effect, ScoreDisp, LowHPWarning
+    from utils import randomRange, cleanup
+    from customTypes import PauseState, ExitReason, HitState
+    import random
 
-    pygame.mixer.init()
     pygame.mixer.music.load("temp2.wav")
     # create pygame window
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWSURFACE)
+    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL | pygame.SCALED, 0, 0, 1)
 
     # create pygame clock object
     clock = pygame.time.Clock()
@@ -226,20 +195,18 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
 
     # generate large note
     for n in noteStartList:
-        if n <= duration:
-            if prevX == None:
-                prevX = random.randint(10, WIN_W - 80)
-                note = LargeNote(prevX, PAD_Y_POS - ((PAD_Y_POS) / ((1 / SPEED_MULTIPLIER) / bpm) * n))
-                largenotes.append(note)
-            else:
-                if abs(noteStartList[noteStartList.index(n) - 1] - n) <= 0.008 and noteStartList.index(n) >= 1:
-                    noteStartList.remove(n)
-                else:
-                    prevX = randomRange(prevX, 280)
-                note = LargeNote(prevX, PAD_Y_POS - ((PAD_Y_POS) / ((1 / SPEED_MULTIPLIER) / bpm) * n))
-                largenotes.append(note)
+        if prevX == None:
+            prevX = random.randint(10, WIN_W - 80)
+            note = LargeNote(prevX, PAD_Y_POS - (LARGE_NOTE_SPRITE.get_height() / 2) - ((PAD_Y_POS - LARGE_NOTE_SPRITE.get_height() / 2) / ((1 / SPEED_MULTIPLIER) / bpm) * n))
+            largenotes.append(note)
         else:
-            break
+            if abs(noteStartList[noteStartList.index(n) - 1] - n) <= 0.008 and noteStartList.index(n) >= 1:
+                noteStartList.remove(n)
+            else:
+                prevX = randomRange(prevX, 280)
+            note = LargeNote(prevX, PAD_Y_POS - ((PAD_Y_POS) / ((1 / SPEED_MULTIPLIER) / bpm) * n))
+            largenotes.append(note)
+
 
     pad = Pad(100, PAD_Y_POS)
 
@@ -250,12 +217,11 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
         prevX = None
         for n2 in smallNoteStartList[n]:
             if prevX == None:
-                note = SmallNote(x + 16.5, PAD_Y_POS - ((PAD_Y_POS) / ((1 / SPEED_MULTIPLIER) / bpm) * n2))
-                prevX = x
+                pass
             else:
                 x = randomRange(prevX, 46)
-                note = SmallNote(x + 16.5, PAD_Y_POS - ((PAD_Y_POS) / ((1 / SPEED_MULTIPLIER) / bpm) * n2))
-                prevX = x
+            note = SmallNote(x + 16.5, PAD_Y_POS - ((PAD_Y_POS) / ((1 / SPEED_MULTIPLIER) / bpm) * n2))
+            prevX = x
 
             smallnotes.append(note)
 
@@ -274,10 +240,14 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
     largeNoteCount = 0
     smallNoteCount = 0
     score = 0
+    hp = 80
 
     # init fonts
     font = pygame.font.Font(FONT, 30)
     font2 = pygame.font.Font(FONT2, 15)
+
+    # init warning var
+    warning = LowHPWarning()
 
     pygame.mixer.music.play()
     while running:
@@ -285,8 +255,6 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
         # fill display with black
         events = pygame.event.get()
         mouseX, mouseY = pygame.mouse.get_pos()
-
-        
         
         for e in events:
             # keypress
@@ -305,7 +273,7 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
                         pygame.mixer.music.unload()
                         # loading icon
                         loadingIconRect = LOADING_ICON.get_rect()
-                        display.blit(pygame.image.load(PAUSE_BACKGROUND), (0, 0))
+                        display.blit(PAUSE_BACKGROUND, (0, 0))
                         display.blit(LOADING_ICON, ((WIN_W - loadingIconRect.width) / 2, (WIN_H - loadingIconRect.height) / 2))
                         pygame.display.flip()
                         return ExitReason.Restart, None, None, None
@@ -336,7 +304,7 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
                         pygame.mixer.music.stop()
                         pygame.mixer.music.unload()
                         loadingIconRect = LOADING_ICON.get_rect()
-                        display.blit(pygame.image.load(PAUSE_BACKGROUND), (0, 0))
+                        display.blit(PAUSE_BACKGROUND, (0, 0))
                         display.blit(LOADING_ICON, ((WIN_W - loadingIconRect.width) / 2, (WIN_H - loadingIconRect.height) / 2))
                         pygame.display.flip()
                         return ExitReason.Restart, None, None, None
@@ -344,41 +312,50 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
                         pygame.mixer.music.stop()
                         pygame.mixer.music.unload()
                         return ExitReason.Exit, None, None, None
-
+        
+        # game is running
         if paused == PauseState.NotPausing:
             display.blit(BACKGROUND_IMAGE, (0, 0))
-            pad.x = mouseX
+            if mouseX != pad.x:
+                pad.x = mouseX
             
             for n in notes:
-                if clock.get_fps() != 0 or clock.get_fps() > FPS:
+                if clock.get_fps() != 0:
                     n.update(bpm, clock.get_fps())
                 else:
                     n.update(bpm, FPS)
-                if (PAD_Y_POS + pad.rect.height / 2 >= n.y + n.rect.height >= PAD_Y_POS and (pad.x - n.rect.width + 10 <= n.x <= pad.x + pad.rect.width - 10)):
-                    if type(n).__name__ == "LargeNote":
-                        largeNoteCount += 1
-                        fx.append(Effect(display, n.x + 14 + n.rect.width / 2 - 25, PAD_Y_POS - 50, HitState.Hit, padX=pad.x))
-                        addScoreFx = ScoreDisp("LargeNote")
-                    elif type(n).__name__ == "SmallNote":
-                        smallNoteCount += 1
-                        fx.append(Effect(display, n.x + n.rect.width / 2 - 25, PAD_Y_POS - 50, HitState.Hit, padX=pad.x))
-                        addScoreFx = ScoreDisp("SmallNote")
-                    notes.remove(n)
-                elif (n.y + n.rect.height >= WIN_H + 20):
-                    if type(n).__name__ == "LargeNote":
-                        fx.append(Effect(display, n.x + 14 + n.rect.width / 2 - 25, WIN_H - 30, HitState.Miss))
-                    elif type(n).__name__ == "SmallNote":
-                        fx.append(Effect(display, n.x + n.rect.width / 2 - 25, WIN_H - 30, HitState.Miss))
-                    notes.remove(n)
-                else:
-                    display.blit(n.image, (n.x, n.y))
+                # if note is in screen
+                if n.y > 0 - n.rect.height:
+                # if note is catched
+                    if (n.y + n.rect.height) >= PAD_Y_POS and (pad.x - n.rect.width + 10 <= n.x <= pad.x + pad.rect.width - 10):
+                        if type(n).__name__ == "LargeNote":
+                            largeNoteCount += 1
+                            fx.append(Effect(display, n.x + 14 + n.rect.width / 2 - 25, PAD_Y_POS - 50, HitState.Hit, padX=pad.x))
+                            addScoreFx = ScoreDisp("LargeNote")
+                            hp += HP_DEPLETION_RATE * 0.25
+                        elif type(n).__name__ == "SmallNote":
+                            smallNoteCount += 1
+                            fx.append(Effect(display, n.x + n.rect.width / 2 - 25, PAD_Y_POS - 50, HitState.Hit, padX=pad.x))
+                            addScoreFx = ScoreDisp("SmallNote")
+                            hp += HP_DEPLETION_RATE * 0.1
+                        notes.remove(n)
+                    # if note is missed
+                    elif (n.y + n.rect.height >= WIN_H + 20):
+                        if type(n).__name__ == "LargeNote":
+                            fx.append(Effect(display, n.x + 14 + n.rect.width / 2 - 25, WIN_H - 30, HitState.Miss))
+                        elif type(n).__name__ == "SmallNote":
+                            fx.append(Effect(display, n.x + n.rect.width / 2 - 25, WIN_H - 30, HitState.Miss))
+                        hp -= HP_DEPLETION_RATE
+                        notes.remove(n)
+                    else:
+                        display.blit(n.image, (n.x, n.y))
             
             for f in fx:
                 if f.alpha > 0:
                     f.update()
                     if f.t == HitState.Hit:
                         display.blit(f.img, (f.x - f.padX + pad.x, f.y))
-                    else:
+                    elif f.t == HitState.Miss:
                         display.blit(f.img, (f.x, f.y))
                 else:
                     fx.remove(f)
@@ -387,19 +364,43 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
                 addScoreFx.show()
                 display.blit(addScoreFx.img, (pad.x + pad.rect.width / 2 - addScoreFx.rect.width / 2, PAD_Y_POS - addScoreFx.rect.height - 30))
 
+
+            if hp > 100:
+                hp = 100
+            elif 100 >= hp > 32:
+                warning.hide()
+            elif 32 >= hp >= 0:
+                warning.update()
+            elif 0 > hp:
+                pygame.mixer.music.stop()
+                pygame.mixer.music.unload()
+                return ExitReason.Failed, None, None, None
+
+
             score = largeNoteCount * 200 + smallNoteCount * 100
             scoreDisp = font.render(f"{str(score).zfill(9)}", True, WHITE_TEXT)
+            hpDisp = font.render(f"{round(hp)}%", True, LINK_COLOR)
             songNameDisp = font2.render(songName, True, pygame.color.Color(WHITE_TEXT))
-    
+
+            if not warning.hidden:
+                warning.render(display)
+            display.blit(scoreDisp, (10, 10))
+            display.blit(songNameDisp, (10, WIN_H - 30))
+            display.blit(hpDisp, (WIN_W - hpDisp.get_width() - 10, 10))
+
             pad.render(display)
         elif paused == PauseState.Pausing:
             if not pauseTextDrawn:
                 pygame.mixer.music.pause()
-                display.blit(pygame.image.load(PAUSE_BACKGROUND), (0, 0)) 
                 scoreDisp = font.render(f"{str(score).zfill(9)}", True, WHITE_TEXT)
                 songNameDisp = font2.render(songName, True, pygame.color.Color(WHITE_TEXT))
+                display.blit(scoreDisp, (10, 10))
+                display.blit(songNameDisp, (10, WIN_H - 30))
+                display.blit(PAUSE_BACKGROUND, (0, 0)) 
+                
                 pauseText.show(display)
                 pauseTextDrawn = True
+                
             
         elif paused == PauseState.Waiting:
             if ctd.i <= 100:
@@ -426,8 +427,7 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
             return ExitReason.Finish, smallNoteCount, largeNoteCount, score
         
         
-        display.blit(scoreDisp, (10, 10))
-        display.blit(songNameDisp, (10, WIN_H - 30))
+        
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -438,7 +438,7 @@ def showFinalScore(ln, sn, scr, name):
     lnIcon = LargeNote(0, 0)
     snIcon = SmallNote(0, 0)
 
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWSURFACE)
+    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL | pygame.DOUBLEBUF)
     clock = pygame.time.Clock()
     
     font = pygame.font.Font(FONT, 40)
@@ -449,7 +449,7 @@ def showFinalScore(ln, sn, scr, name):
     snCounter = 0
     scrCounter = 0
 
-    dark_overlay = pygame.image.load(PAUSE_BACKGROUND)
+    dark_overlay = PAUSE_BACKGROUND
     while True:
         for e in pygame.event.get():
             if e.type == pygame.MOUSEBUTTONDOWN or e.type == pygame.QUIT:
@@ -496,24 +496,39 @@ def showFinalScore(ln, sn, scr, name):
         display.blit(TAP_PROMPT, ((WIN_W - promptRect.width) / 2, WIN_H - 10 - promptRect.height))
         pygame.display.flip()
         clock.tick(FPS)
+
+def failedScreen():
+    from common import WIN_W, WIN_H, FPS, PAUSE_BACKGROUND, FAILED_SCREEN_TITLE, GAME_OVER_SOUND, BACKGROUND_IMAGE
+
+    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL | pygame.DOUBLEBUF)
+    clock = pygame.time.Clock()
+    GAME_OVER_SOUND.play(loops=0)
+    while True:
+        display.blit(BACKGROUND_IMAGE, (0, 0))
+        display.blit(PAUSE_BACKGROUND, (0, 0))
+        display.blit(FAILED_SCREEN_TITLE, ((WIN_W - FAILED_SCREEN_TITLE.get_width()) / 2, 50))
+        pygame.display.flip()
+        clock.tick(FPS)
+
 if __name__ == "__main__":
-    # clean up
-    cleanup("temp.wav")
-    pygame.init()
-
+    
+    from customTypes import ExitReason, Part
     from common import AUDIO_FREQ, AUDIO_CHANNELS, AUDIO_BUFFER_SIZE
+    pygame.mixer.pre_init(AUDIO_FREQ, 16, AUDIO_CHANNELS, AUDIO_BUFFER_SIZE)
 
-    pygame.mixer.init()
-    pygame.mixer.init(AUDIO_FREQ, -16, AUDIO_CHANNELS, AUDIO_BUFFER_SIZE)
+    pygame.init()
+    pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN])
     # display file dialog
     while True:
         f, part = mainMenu()
         if part == Part.Play:
             while True:
-                d, name, n, sn, cst, bpm = analyze(f)
-                r, sn, ln, scr = session(f, d, name, n, sn, cst, bpm)
-                cleanup("temp.wav")
-                cleanup("temp2.wav")
+                name, n, sn, cst, bpm = analyze(f)
+                r, sn, ln, scr = session(f, name, n, sn, bpm)
+
+                for i in ["temp.wav", "temp2.wav"]:
+                    if os.path.exists(i):
+                        os.remove(i)
                 if r == ExitReason.Exit:         
                     break
                 elif r == ExitReason.Finish:
@@ -521,6 +536,8 @@ if __name__ == "__main__":
                     break
                 elif r == ExitReason.Restart:
                     pass
+                elif r == ExitReason.Failed:
+                    failedScreen()
         elif part == Part.About:
             licensePage()
         elif part == Part.Help:
@@ -528,8 +545,6 @@ if __name__ == "__main__":
         elif part == Part.Exit:   
             break
         
-    cleanup("temp2.wav")
-    cleanup("temp.wav")
     pygame.quit()
     
     quit()

@@ -23,3 +23,4 @@ class ExitReason(enum.Enum):
     Exit = 300
     Finish = 301
     Restart = 302
+    Failed = 303

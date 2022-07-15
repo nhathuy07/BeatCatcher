@@ -1,14 +1,14 @@
-import os
+from os import path, remove
 import wave
 import pygame.rect
 from common import WIN_W
 from common import ROUNDING_DIGITS
-import random
+from random import randint
 
 def cleanup(f: str):
-    if os.path.exists(f):
+    if path.exists(f):
         print("Cleaning up...")
-        os.remove(f)
+        remove(f)
 
 def numberRounding(x: float) -> float:
     return round(x, ROUNDING_DIGITS)
@@ -19,7 +19,7 @@ def randomRange(x: int, i: int) -> int:
         minimum = 10
     if maximum > WIN_W - 80:
         maximum = WIN_W - 80
-    return random.randint(minimum, maximum)
+    return randint(minimum, maximum)
 
 # code adapted from https://www.thepythoncode.com/article/concatenate-audio-files-in-python 
 def concatenateAudio(clipPaths):
