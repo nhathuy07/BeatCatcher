@@ -329,7 +329,7 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
                 # if note is in screen
                 if n.y > 0 - n.rect.height:
                 # if note is catched
-                    if (n.y + n.rect.height) >= PAD_Y_POS and (pad.x - n.rect.width + 10 <= n.x <= pad.x + pad.rect.width - 10):
+                    if  PAD_Y_POS + pad.rect.height * 0.8 >= (n.y + n.rect.height) >= PAD_Y_POS and (pad.x - n.rect.width + 20 <= n.x <= pad.x + pad.rect.width - 20):
                         if type(n).__name__ == "LargeNote":
                             largeNoteCount += 1
                             fx.append(Effect(display, n.x + 14 + n.rect.width / 2 - 25, PAD_Y_POS - 50, HitState.Hit, padX=pad.x))
@@ -434,68 +434,16 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
         clock.tick(FPS)
 
 def showFinalScore(ln, sn, scr, name):
-    from common import WIN_W, WIN_H, FONT, PAUSE_BACKGROUND, FONT2, BACKGROUND_IMAGE, WHITE_TEXT, TAP_PROMPT, FINAL_SCORE_TITLE, FPS
-    from entities import LargeNote, SmallNote
-
-    lnIcon = LargeNote(0, 0)
-    snIcon = SmallNote(0, 0)
-
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL | pygame.DOUBLEBUF)
+    from entities import ShowFinalScore
+    from common import FPS, WIN_H, WIN_W
+    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL)
+    showFinalScore = ShowFinalScore(ln, sn, scr, name)
     clock = pygame.time.Clock()
-    
-    font = pygame.font.Font(FONT, 40)
-    font2 = pygame.font.Font(FONT, 63)
-    font3 = pygame.font.Font(FONT2, 20)
-
-    lnCounter = 0
-    snCounter = 0
-    scrCounter = 0
-
-    dark_overlay = PAUSE_BACKGROUND
-    while True:
+    while 1:
         for e in pygame.event.get():
             if e.type == pygame.MOUSEBUTTONDOWN or e.type == pygame.QUIT:
                 return None
-        display.blit(BACKGROUND_IMAGE, (0, 0))
-        display.blit(dark_overlay, (0, 0))
-        if lnCounter < ln:
-            lnCounter += int(ln * 0.03)
-        elif lnCounter >= ln:
-            lnCounter = ln
-        
-        if snCounter < sn:
-            snCounter += int(sn * 0.03)
-        elif snCounter >= sn:
-            snCounter = sn
-        
-        if scrCounter < scr:
-            scrCounter += int(scr * 0.03)
-        elif scrCounter >= scr:
-            scrCounter = scr
-        
-        lnDisp = font.render(f" x {lnCounter}", True, WHITE_TEXT)
-        snDisp = font.render(f" x {snCounter}", True, WHITE_TEXT)
-        scrDisp = font2.render(f"{scrCounter}", True, WHITE_TEXT)
-        nameDisp = font3.render(name, True, WHITE_TEXT)
-
-        lnDispRect = lnDisp.get_rect()
-        snDispRect = snDisp.get_rect()
-        scrDispRect = scrDisp.get_rect()
-        nameDispRect = nameDisp.get_rect()
-        promptRect = TAP_PROMPT.get_rect()
-        titleRect = FINAL_SCORE_TITLE.get_rect()
-
-        display.blit(FINAL_SCORE_TITLE, ((WIN_W - titleRect.width) / 2, 50))
-        display.blit(nameDisp, ((WIN_W - nameDispRect.width) / 2, 175))
-        display.blit(lnIcon.image, ((WIN_W / 2 - lnIcon.rect.width - lnDispRect.width) / 2, 240))
-        display.blit(lnDisp, ((WIN_W / 2 - lnIcon.rect.width - lnDispRect.width) / 2 + lnIcon.rect.width, 240 + (lnIcon.rect.height + 28 - lnDispRect.height) / 2))
-
-        display.blit(snIcon.image, ((WIN_W / 2 - snIcon.rect.width - snDispRect.width) / 2 + WIN_W / 2, 263))
-        display.blit(snDisp, ((WIN_W / 2 - snIcon.rect.width - snDispRect.width) / 2 + WIN_W / 2 + snIcon.rect.width, 263 + (snIcon.rect.height - snDispRect.height) / 2))
-
-        display.blit(scrDisp, ((WIN_W - scrDispRect.width) / 2, 360))
-        
-        display.blit(TAP_PROMPT, ((WIN_W - promptRect.width) / 2, WIN_H - 10 - promptRect.height))
+        showFinalScore.show(display)
         pygame.display.flip()
         clock.tick(FPS)
 

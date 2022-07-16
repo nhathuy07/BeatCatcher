@@ -1,4 +1,6 @@
-from pygame import color as pg_color
+### IMPORT STATEMENTS
+from os import path as os_path
+
 from pygame import rect as pg_rect
 from pygame import font as pg_font
 from pygame import transform as pg_transform
@@ -6,7 +8,7 @@ from pygame import display as pg_disp
 from pygame import init as pg_init
 from pygame import mixer as pg_mixer
 from pygame import BLEND_RGBA_MULT
-from os import path as os_path
+
 from subprocess import run as s_run
 
 from numpy import array
@@ -16,12 +18,15 @@ from librosa.onset import onset_backtrack, onset_detect, onset_strength
 from librosa import load as l_load
 from librosa.beat import tempo as l_tempo
 
+
 from utils import (
     concatenateAudio,
 
 )
 from common import (
     BLANK_AUDIO,
+    FINAL_SCORE_TITLE,
+    FONT,
     FONT2,
     GAME_OVER_SOUND,
     LONG_NOTE_MINIMUM_DURATION,
@@ -36,6 +41,7 @@ from common import (
     RESUME_BTN,
     INFO_BTN,
     HELP_BTN,
+    TAP_PROMPT,
     WIN_W,
     MENU_TITLE,
     WIN_H,
@@ -60,6 +66,7 @@ from customTypes import (
 pg_init()
 pg_disp.init()
 
+### ANALYZER
 class AudioAnalyzer():
     def __init__(self, fileName: str) -> None:
 
@@ -122,30 +129,8 @@ class AudioAnalyzer():
                     smallNoteGroup.append(t)
             smallNotesList.append(smallNoteGroup)
         return smallNotesList
-
-
-class BaseNote():
-    def update(self, bpm, fps):
-        
-        self.y += PAD_Y_POS / ((1 / SPEED_MULTIPLIER) / bpm) / fps
-
-class LargeNote(BaseNote):
-    def __init__(self, x, y):
-        
-        self.x = x
-        self.y = y
-        self.image = LARGE_NOTE_SPRITE
-        self.rect = pg_rect.Rect(14, 14, 52, 52)
-        
-
-class SmallNote(BaseNote):
-    def __init__(self, x, y):
-        
-        self.x = x
-        self.y = y
-        self.image = SMALL_NOTE_SPRITE
-        self.rect = self.image.get_rect()
     
+### UI CODE
 class MainMenu():
     def __init__(self) -> None:
         
@@ -181,17 +166,6 @@ class MainMenu():
         window.blit(self.aboutBtn, self.aboutBtnPos)
         window.blit(self.helpBtn, self.helpBtnPos)
         window.blit(MENU_TITLE, self.titlePos)
-
-class Pad():
-    def __init__(self, x, y):
-
-        self.x = x
-        self.y = y
-        self.image = PAD_SPRITE
-        self.rect = self.image.get_rect()
-    def render(self, window):
-        self.rect.topleft = (self.x, self.y)
-        window.blit(self.image, (self.x, self.y))
 
 class PauseMenu():
     def __init__(self) -> None:
@@ -238,6 +212,90 @@ class PauseMenu():
         window.blit(self.resumeBtnText, self.resumeBtnTextPos)
         window.blit(self.exitBtnText, self.exitBtnTextPos)
 
+class FailedScreen():
+    def __init__(self) -> None:
+        # fonts
+        font = pg_font.Font(FONT2, 28)
+
+        # buttons
+        self.retryBtn = pg_transform.smoothscale(RESTART_BTN, (200, 200))
+        self.exitBtn = pg_transform.smoothscale(EXIT_BTN, (200, 200))
+
+        # texts
+        self.retryTxt = font.render("Retry", True, WHITE_TEXT)
+        self.exitTxt = font.render("Exit", True, WHITE_TEXT)
+
+        # rects
+        self.retryBtnRect = self.retryBtn.get_rect()
+        self.exitBtnRect = self.exitBtn.get_rect()
+
+        # positions
+        self.retryBtnPos = ((WIN_W / 2 - self.retryBtn.get_width()) / 2, 230)
+        self.exitBtnPos = ((WIN_W / 2) + (WIN_W /2 - self.exitBtn.get_width()) / 2, 230)
+        self.titlePos = ((WIN_W - FAILED_SCREEN_TITLE.get_width()) / 2, 30)
+
+        self.retryTxtPos = ((WIN_W / 2 - self.retryTxt.get_width()) / 2, self.retryBtn.get_height() + 260)
+        self.exitTxtPos = ((WIN_W / 2) + (WIN_W / 2 - self.exitTxt.get_width()) / 2, self.exitBtn.get_height() + 260)
+        # update rect pos
+        self.retryBtnRect.topleft = self.retryBtnPos
+        self.exitBtnRect.topleft = self.exitBtnPos
+
+        # audio
+        self.sound = pg_mixer.Sound(GAME_OVER_SOUND)
+
+        # is audio played?
+        self.audioPlayed = False
+    def show(self, window):
+        window.blit(BACKGROUND_IMAGE, (0, 0))
+        window.blit(PAUSE_BACKGROUND, (0, 0))
+        window.blit(FAILED_SCREEN_TITLE, self.titlePos)
+        window.blit(self.retryBtn, self.retryBtnPos)
+        window.blit(self.exitBtn, self.exitBtnPos)
+        window.blit(self.exitTxt, self.exitTxtPos)
+        window.blit(self.retryTxt, self.retryTxtPos)
+
+    def playAudio(self):
+        if not self.audioPlayed:
+            self.sound.play(loops=0)
+            self.audioPlayed = True
+
+class ShowFinalScore():
+    def __init__(self, ln, sn, scr, name):
+        self.ln = ln
+        self.sn = sn
+        self.scr = scr
+        self.name = name
+        self.font = pg_font.Font(FONT, 40)
+        self.font2 = pg_font.Font(FONT, 63)
+        self.font3 = pg_font.Font(FONT2, 20)
+
+        self.counterProg = 0
+
+    def show(self, window):
+            self.counterProg += 0.03
+            if self.counterProg >= 1:
+                self.counterProg = 1
+            
+            self.lnDisp = self.font.render(f" x {int(self.ln * self.counterProg)}", True, WHITE_TEXT)
+            self.snDisp = self.font.render(f" x {int(self.sn * self.counterProg)}", True, WHITE_TEXT)
+            self.scrDisp = self.font2.render(f"{int(self.scr * self.counterProg)}", True, WHITE_TEXT)
+            self.nameDisp = self.font3.render(self.name, True, WHITE_TEXT)
+
+            window.blit(BACKGROUND_IMAGE, (0, 0))
+            window.blit(PAUSE_BACKGROUND, (0, 0))
+
+            window.blit(FINAL_SCORE_TITLE, ((WIN_W - FINAL_SCORE_TITLE.get_width()) / 2, 50))
+            
+            window.blit(self.nameDisp, ((WIN_W - self.nameDisp.get_width()) / 2, 175))
+            
+            window.blit(LARGE_NOTE_SPRITE, ((WIN_W / 2 - self.lnDisp.get_width() - LARGE_NOTE_SPRITE.get_width()) / 2, (WIN_H - LARGE_NOTE_SPRITE.get_height()) / 2 - 70))
+            window.blit(self.lnDisp, ((WIN_W / 2 - self.lnDisp.get_width() + LARGE_NOTE_SPRITE.get_width()) / 2, (WIN_H - self.lnDisp.get_height()) / 2 - 70))
+
+            window.blit(SMALL_NOTE_SPRITE, ((WIN_W / 2 - self.snDisp.get_width() - SMALL_NOTE_SPRITE.get_width()) / 2 + (WIN_W / 2), (WIN_H - SMALL_NOTE_SPRITE.get_height()) / 2 - 70))
+            window.blit(self.snDisp, ((WIN_W / 2 - self.snDisp.get_width() + SMALL_NOTE_SPRITE.get_width()) / 2 + (WIN_W / 2), (WIN_H - self.snDisp.get_height()) / 2 - 70))
+
+            window.blit(TAP_PROMPT, ((WIN_W - TAP_PROMPT.get_width()) / 2, WIN_H - 10 - TAP_PROMPT.get_height()))
+            window.blit(self.scrDisp, ((WIN_W - self.scrDisp.get_width()) / 2, (WIN_H - self.scrDisp.get_width()) / 2 + 80))
 
 class PauseCountdown():
     def __init__(self) -> None:
@@ -256,7 +314,43 @@ class PauseCountdown():
         window.blit(PAUSE_BACKGROUND, (0, 0))
         window.blit(self.countdownText, self.countdownTextPos)
         window.blit(self.image, (self.x, self.y))
-            
+
+
+### GAME OBJECTS
+class Pad():
+    def __init__(self, x, y):
+
+        self.x = x
+        self.y = y
+        self.image = PAD_SPRITE
+        self.rect = self.image.get_rect()
+    def render(self, window):
+        self.rect.topleft = (self.x, self.y)
+        window.blit(self.image, (self.x, self.y))
+
+class BaseNote():
+    def update(self, bpm, fps):
+        
+        self.y += PAD_Y_POS / ((1 / SPEED_MULTIPLIER) / bpm) / fps
+
+class LargeNote(BaseNote):
+    def __init__(self, x, y):
+        
+        self.x = x
+        self.y = y
+        self.image = LARGE_NOTE_SPRITE
+        self.rect = pg_rect.Rect(14, 14, 52, 52)
+        
+class SmallNote(BaseNote):
+    def __init__(self, x, y):
+        
+        self.x = x
+        self.y = y
+        self.image = SMALL_NOTE_SPRITE
+        self.rect = self.image.get_rect()
+
+
+### VISUAL EFFECTS
 class Effect():
     def __init__(self, window, x, y, t, padX = None) -> None:
         self.img = 0
@@ -276,7 +370,6 @@ class Effect():
             self.img = self.img.convert_alpha()
             self.img.fill((255, 255, 255, self.alpha), None, BLEND_RGBA_MULT)
             self.alpha -= 20
-
 
 class LowHPWarning():
     def __init__(self) -> None:
@@ -325,50 +418,3 @@ class ScoreDisp():
             self.img.fill((255, 255, 255, self.alpha), None, BLEND_RGBA_MULT)
             self.alpha -= 20
 
-class FailedScreen():
-    def __init__(self) -> None:
-        # fonts
-        font = pg_font.Font(FONT2, 28)
-
-        # buttons
-        self.retryBtn = pg_transform.smoothscale(RESTART_BTN, (200, 200))
-        self.exitBtn = pg_transform.smoothscale(EXIT_BTN, (200, 200))
-
-        # texts
-        self.retryTxt = font.render("Retry", True, WHITE_TEXT)
-        self.exitTxt = font.render("Exit", True, WHITE_TEXT)
-
-        # rects
-        self.retryBtnRect = self.retryBtn.get_rect()
-        self.exitBtnRect = self.exitBtn.get_rect()
-
-        # positions
-        self.retryBtnPos = ((WIN_W / 2 - self.retryBtn.get_width()) / 2, 230)
-        self.exitBtnPos = ((WIN_W / 2) + (WIN_W /2 - self.exitBtn.get_width()) / 2, 230)
-        self.titlePos = ((WIN_W - FAILED_SCREEN_TITLE.get_width()) / 2, 30)
-
-        self.retryTxtPos = ((WIN_W / 2 - self.retryTxt.get_width()) / 2, self.retryBtn.get_height() + 260)
-        self.exitTxtPos = ((WIN_W / 2) + (WIN_W / 2 - self.exitTxt.get_width()) / 2, self.exitBtn.get_height() + 260)
-        # update rect pos
-        self.retryBtnRect.topleft = self.retryBtnPos
-        self.exitBtnRect.topleft = self.exitBtnPos
-
-        # audio
-        self.sound = pg_mixer.Sound(GAME_OVER_SOUND)
-
-        # is audio played?
-        self.audioPlayed = False
-    def show(self, window):
-        window.blit(BACKGROUND_IMAGE, (0, 0))
-        window.blit(PAUSE_BACKGROUND, (0, 0))
-        window.blit(FAILED_SCREEN_TITLE, self.titlePos)
-        window.blit(self.retryBtn, self.retryBtnPos)
-        window.blit(self.exitBtn, self.exitBtnPos)
-        window.blit(self.exitTxt, self.exitTxtPos)
-        window.blit(self.retryTxt, self.retryTxtPos)
-
-    def playAudio(self):
-        if not self.audioPlayed:
-            self.sound.play(loops=0)
-            self.audioPlayed = True
-    
