@@ -159,6 +159,7 @@ def mainMenu():
 def analyze(f):
     print("Loading analyzer...")
     from entities import AudioAnalyzer
+    print("Analyzer loaded! Finding notes...")
     audioObj = AudioAnalyzer(f)
     songName = audioObj.loadIntoLibrosa()
     noteStartList = audioObj.detectNotes()
@@ -194,6 +195,7 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
     prevX = None
 
     # generate large note
+    print("Generating level...")
     for n in noteStartList:
         if prevX == None:
             prevX = random.randint(10, WIN_W - 80)
@@ -457,12 +459,12 @@ def showFinalScore(ln, sn, scr, name):
         display.blit(BACKGROUND_IMAGE, (0, 0))
         display.blit(dark_overlay, (0, 0))
         if lnCounter < ln:
-            lnCounter += 2
+            lnCounter += int(ln * 0.03)
         elif lnCounter >= ln:
             lnCounter = ln
         
         if snCounter < sn:
-            snCounter += 2
+            snCounter += int(sn * 0.03)
         elif snCounter >= sn:
             snCounter = sn
         
@@ -498,15 +500,28 @@ def showFinalScore(ln, sn, scr, name):
         clock.tick(FPS)
 
 def failedScreen():
-    from common import WIN_W, WIN_H, FPS, PAUSE_BACKGROUND, FAILED_SCREEN_TITLE, GAME_OVER_SOUND, BACKGROUND_IMAGE
+    from entities import FailedScreen
+    from common import WIN_H, WIN_W, FPS, PAUSE_BACKGROUND, LOADING_ICON
+    from customTypes import ExitReason
 
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL | pygame.DOUBLEBUF)
+    display = pygame.display.set_mode((WIN_W, WIN_H))
     clock = pygame.time.Clock()
-    GAME_OVER_SOUND.play(loops=0)
-    while True:
-        display.blit(BACKGROUND_IMAGE, (0, 0))
-        display.blit(PAUSE_BACKGROUND, (0, 0))
-        display.blit(FAILED_SCREEN_TITLE, ((WIN_W - FAILED_SCREEN_TITLE.get_width()) / 2, 50))
+    failedScreen = FailedScreen()
+    while 1:
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                break
+            elif e.type == pygame.MOUSEBUTTONDOWN:
+                mouse = pygame.mouse.get_pos()
+                if failedScreen.exitBtnRect.collidepoint(mouse):
+                    return ExitReason.Exit
+                elif failedScreen.retryBtnRect.collidepoint(mouse):
+                    display.blit(PAUSE_BACKGROUND, (0, 0))
+                    display.blit(LOADING_ICON, ((WIN_W - LOADING_ICON.get_width()) / 2, (WIN_H - LOADING_ICON.get_height()) / 2))
+                    pygame.display.flip()
+                    return ExitReason.Restart
+        failedScreen.playAudio()
+        failedScreen.show(display)
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -537,7 +552,11 @@ if __name__ == "__main__":
                 elif r == ExitReason.Restart:
                     pass
                 elif r == ExitReason.Failed:
-                    failedScreen()
+                    failed = failedScreen()
+                    if failed == ExitReason.Exit:
+                        break
+                    elif failed == ExitReason.Restart:
+                        pass
         elif part == Part.About:
             licensePage()
         elif part == Part.Help:

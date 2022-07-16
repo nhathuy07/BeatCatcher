@@ -1,8 +1,8 @@
 
-import pygame.display
+from pygame import display
 from pygame.transform import smoothscale, scale
-import pygame.image
-import pygame.surface
+from pygame import image as pg_image
+from pygame import surface as pg_surface
 from pygame import HWSURFACE
 from pygame.rect import Rect
 from pygame.mixer import Sound
@@ -11,13 +11,13 @@ from os import path, getenv, getcwd
 
 
 
-pygame.display.init()
+display.init()
 pg_mixer_init()
 
 WIN_W = 1200
 WIN_H = 700
 
-pygame.display.set_mode((WIN_W, WIN_H), HWSURFACE)
+display.set_mode((WIN_W, WIN_H), HWSURFACE)
 ROUNDING_DIGITS = 5
 AUDIO_CHANNELS = 1
 AUDIO_BUFFER_SIZE = 32
@@ -29,40 +29,41 @@ SPEED_MULTIPLIER = 0.015
 
 FPS = 60
 
-LARGE_NOTE_SPRITE = pygame.image.load("assets/HitObject.png").convert_alpha()
-SMALL_NOTE_SPRITE = pygame.image.load("assets/HitObjectSmall.png").convert_alpha()
-PAD_SPRITE = pygame.image.load("assets/Pad.png").convert_alpha()
+LARGE_NOTE_SPRITE = pg_image.load("assets/HitObject.png").convert_alpha()
+SMALL_NOTE_SPRITE = pg_image.load("assets/HitObjectSmall.png").convert_alpha()
+PAD_SPRITE = pg_image.load("assets/Pad.png").convert_alpha()
 
-RESTART_BTN = pygame.image.load("assets/ReloadBtn.png").convert_alpha()
-RESUME_BTN = pygame.image.load("assets/PlayButton.png").convert_alpha()
-EXIT_BTN = pygame.image.load("assets/logout.png").convert_alpha()
-HELP_BTN = pygame.image.load("assets/help.png").convert_alpha()
-INFO_BTN = pygame.image.load("assets/info.png").convert_alpha()
+RESTART_BTN = pg_image.load("assets/ReloadBtn.png").convert_alpha()
+RESUME_BTN = pg_image.load("assets/PlayButton.png").convert_alpha()
+EXIT_BTN = pg_image.load("assets/logout.png").convert_alpha()
+HELP_BTN = pg_image.load("assets/help.png").convert_alpha()
+INFO_BTN = pg_image.load("assets/info.png").convert_alpha()
 
 RESUME_COUNTDOWN_SPRITES = [
-    pygame.image.load("assets/3 (Custom).png").convert_alpha(), 
-    pygame.image.load("assets/2 (Custom).png").convert_alpha(), 
-    pygame.image.load("assets/1 (Custom).png").convert_alpha()]
+    pg_image.load("assets/3 (Custom).png").convert_alpha(), 
+    pg_image.load("assets/2 (Custom).png").convert_alpha(), 
+    pg_image.load("assets/1 (Custom).png").convert_alpha()]
 
-MAIN_MENU_BG = pygame.image.load("assets/MenuBackground.png").convert_alpha()
-MENU_TITLE = pygame.image.load("assets/menuTitle.png").convert_alpha()
-GUIDE_TITLE = pygame.image.load("assets/guideText.png").convert_alpha()
-PAUSE_BACKGROUND = pygame.image.load("assets/countdownBackground.png").convert_alpha()
+MAIN_MENU_BG = pg_image.load("assets/MenuBackground.png").convert_alpha()
+MENU_TITLE = pg_image.load("assets/menuTitle.png").convert_alpha()
+GUIDE_TITLE = pg_image.load("assets/guideText.png").convert_alpha()
+PAUSE_BACKGROUND = pg_image.load("assets/countdownBackground.png").convert_alpha()
 
-HIT_FX_SPRITE = pygame.image.load("assets/HitEffect.png").convert_alpha()
-MISS_FX_SPRITE = pygame.image.load("assets/MissEffect.png").convert_alpha()
-LOW_HP_WARNING_FX = smoothscale(pygame.image.load("assets/lowHealthFx.png").convert_alpha(), (WIN_W, WIN_H))
+HIT_FX_SPRITE = pg_image.load("assets/HitEffect.png").convert_alpha()
+MISS_FX_SPRITE = pg_image.load("assets/MissEffect.png").convert_alpha()
+LOW_HP_WARNING_FX = smoothscale(pg_image.load("assets/lowHealthFx.png").convert_alpha(), (WIN_W, WIN_H))
 
-LARGE_NOTE_SCORE = smoothscale(pygame.image.load("assets/200.png").convert_alpha(), (124, 78))
-SMALL_NOTE_SCORE = smoothscale(pygame.image.load("assets/100.png").convert_alpha(), (124, 78))
+LARGE_NOTE_SCORE = smoothscale(pg_image.load("assets/200.png").convert_alpha(), (124, 78))
+SMALL_NOTE_SCORE = smoothscale(pg_image.load("assets/100.png").convert_alpha(), (124, 78))
 
-LOADING_ICON = smoothscale(pygame.image.load("assets/loading.png").convert_alpha(), (200, 200))
+LOADING_ICON = smoothscale(pg_image.load("assets/loading.png").convert_alpha(), (200, 200))
 
 FONT = "assets/04B_30__.TTF"
 FONT2 = "assets/VCR_OSD_MONO_1.001.ttf"
 
-PAUSE_TEXT = pygame.image.load("assets/PauseText.png").convert_alpha()
+PAUSE_TEXT = pg_image.load("assets/PauseText.png").convert_alpha()
 
+BLANK_AUDIO = "assets/blank.wav"
 
 # convert degree to radian to draw arc
 DEG_TO_RAD = 0.0174532925
@@ -74,26 +75,26 @@ HP_ARC_BOUNDARY = Rect(WIN_W - 10 - HP_ARC_SIZE, 10, HP_ARC_SIZE, HP_ARC_SIZE)
 BACKGROUND_COLOR = (0, 0, 0)
 LINK_COLOR = (255, 161, 210)
 HP_BAR_COLOR = (153, 239, 253)
-BACKGROUND_IMAGE = smoothscale(pygame.image.load("assets/output-onlinepngtools-min.png").convert(), (WIN_W, WIN_H))
+BACKGROUND_IMAGE = smoothscale(pg_image.load("assets/output-onlinepngtools-min.png").convert(), (WIN_W, WIN_H))
 WHITE_TEXT = (255, 255, 255)
 
 PAD_Y_POS = 620
 
 PROJECT_PATH = (getcwd())
 
-FINAL_SCORE_TITLE = pygame.image.load("assets/final score (Custom).png").convert_alpha()
+FINAL_SCORE_TITLE = pg_image.load("assets/final score (Custom).png").convert_alpha()
 
-FAILED_SCREEN_TITLE = pygame.image.load("assets/failedText.png").convert_alpha()
+FAILED_SCREEN_TITLE = pg_image.load("assets/failedText.png").convert_alpha()
 
 MUSIC_FOLDER = path.join(getenv("USERPROFILE"), "Music")
 
-TAP_PROMPT = scale(pygame.image.load("assets/tapPrompt.png").convert_alpha(), (400 * 0.75, 70 * 0.75))
+TAP_PROMPT = scale(pg_image.load("assets/tapPrompt.png").convert_alpha(), (400 * 0.75, 70 * 0.75))
 
 HELP_IMG = [
-    pygame.image.load("assets/helpPage0.png").convert(),
-    pygame.image.load("assets/helpPage1.png").convert_alpha(),
-    pygame.image.load("assets/helpPage2.png").convert_alpha(),
-    pygame.image.load("assets/helpPage3.png").convert_alpha()
+    pg_image.load("assets/helpPage0.png").convert(),
+    pg_image.load("assets/helpPage1.png").convert_alpha(),
+    pg_image.load("assets/helpPage2.png").convert_alpha(),
+    pg_image.load("assets/helpPage3.png").convert_alpha()
     ]
 
 HELP_TEXT = [
