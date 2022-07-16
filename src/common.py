@@ -2,14 +2,11 @@
 from pygame import display
 from pygame.transform import smoothscale, scale
 from pygame import image as pg_image
-from pygame import surface as pg_surface
 from pygame import HWSURFACE
 from pygame.rect import Rect
 from pygame.mixer import Sound
 from pygame.mixer import init as pg_mixer_init
 from os import path, getenv, getcwd
-
-
 
 display.init()
 pg_mixer_init()

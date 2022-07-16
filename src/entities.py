@@ -1,67 +1,10 @@
 ### IMPORT STATEMENTS
 from os import path as os_path
 
-from pygame import rect as pg_rect
-from pygame import font as pg_font
-from pygame import transform as pg_transform
-from pygame import display as pg_disp
 from pygame import init as pg_init
-from pygame import mixer as pg_mixer
-from pygame import BLEND_RGBA_MULT
+from pygame import display as pg_disp
 
-from subprocess import run as s_run
-
-from numpy import array
-
-from librosa import frames_to_time
-from librosa.onset import onset_backtrack, onset_detect, onset_strength
-from librosa import load as l_load
-from librosa.beat import tempo as l_tempo
-
-
-from utils import (
-    concatenateAudio,
-
-)
-from common import (
-    BLANK_AUDIO,
-    FINAL_SCORE_TITLE,
-    FONT,
-    FONT2,
-    GAME_OVER_SOUND,
-    LONG_NOTE_MINIMUM_DURATION,
-    PAD_Y_POS,
-    PAUSE_BACKGROUND, 
-    SPEED_MULTIPLIER,
-    LARGE_NOTE_SCORE,
-    LARGE_NOTE_SPRITE,
-    SMALL_NOTE_SCORE,
-    SMALL_NOTE_SPRITE,
-    RESTART_BTN,
-    RESUME_BTN,
-    INFO_BTN,
-    HELP_BTN,
-    TAP_PROMPT,
-    WIN_W,
-    MENU_TITLE,
-    WIN_H,
-    MAIN_MENU_BG,
-    PAD_SPRITE,
-    PAUSE_TEXT,
-    EXIT_BTN,
-    WHITE_TEXT,
-    RESUME_COUNTDOWN_SPRITES,
-    PAUSE_BACKGROUND,
-    HIT_FX_SPRITE,
-    MISS_FX_SPRITE,
-    LOW_HP_WARNING_FX,
-    FAILED_SCREEN_TITLE,
-    BACKGROUND_IMAGE
-)
-
-from customTypes import (
-    HitState
-)
+from common import HIT_FX_SPRITE, MISS_FX_SPRITE
 
 pg_init()
 pg_disp.init()
@@ -76,7 +19,16 @@ class AudioAnalyzer():
     def loadIntoLibrosa(self):
         print("Loading song...")
         # import files
-        
+        from subprocess import run as s_run
+        from common import (
+            BLANK_AUDIO
+        )
+        from utils import (
+            concatenateAudio
+        )
+        from librosa import load as l_load
+        from librosa.onset import onset_strength
+
         # song name
         self.songName = os_path.basename(self.fileName)
         # convert if not wav
@@ -94,46 +46,57 @@ class AudioAnalyzer():
 
         return self.songName
     def calcBPM(self):
-        
-        bpm = float(l_tempo(y=self.soundData, sr=self.sampleRate))
-        return bpm
+        from librosa.beat import tempo as l_tempo
+
+        self.bpm = float(l_tempo(y=self.soundData, sr=self.sampleRate))
+        return self.bpm
     
     def detectNotes(self):
+        from librosa.onset import onset_detect, onset_backtrack
+        from librosa import frames_to_time
 
         print("Generating notes...")
         self.noteStartList = onset_detect(y=self.soundData, sr=self.sampleRate, normalize=True, backtrack=True)
         self.noteEndList = onset_backtrack(self.noteStartList, self.oenv)
         
-        self.noteStartList: array = frames_to_time(self.noteStartList, sr=self.sampleRate)
+        self.noteStartList = frames_to_time(self.noteStartList, sr=self.sampleRate)
         #self.noteStartList: tuple = tuple(map(numberRounding,list(self.noteStartList)))
 
-        self.noteEndList: array = frames_to_time(self.noteEndList, sr=self.sampleRate)
+        self.noteEndList = frames_to_time(self.noteEndList, sr=self.sampleRate)
         #self.noteEndList: tuple = tuple(map(numberRounding,list(self.noteEndList)))
         self.noteEndList = tuple(self.noteEndList)
         self.noteStartList = tuple(self.noteStartList)
         return (self.noteStartList)
     
     def detectSmallNotes(self):
-        
+        from common import LONG_NOTE_MINIMUM_DURATION
 
-        bpm = self.calcBPM()
-        noteLength = 15/bpm
+        noteLength = 15/self.bpm
         smallNotesList= [] 
         for i in range(len(self.noteStartList) - 1):
             noteDuration = self.noteEndList[i + 1] - self.noteStartList[i]
             smallNoteGroup = []
             if noteDuration >= LONG_NOTE_MINIMUM_DURATION:
                 t = self.noteStartList[i]
-                while t < self.noteEndList[i + 1] - 60 / bpm:
+                while t < self.noteEndList[i + 1] - 60 / self.bpm:
                     t += noteLength
                     smallNoteGroup.append(t)
             smallNotesList.append(smallNoteGroup)
         return smallNotesList
     
+
 ### UI CODE
 class MainMenu():
     def __init__(self) -> None:
-        
+        from pygame import transform as pg_transform
+        from common import (
+            RESUME_BTN,
+            INFO_BTN,
+            HELP_BTN,
+            WIN_W,
+            MENU_TITLE,
+            WIN_H
+        )
         
         # images
         self.playBtn = pg_transform.smoothscale(RESUME_BTN, (200, 200))
@@ -159,7 +122,7 @@ class MainMenu():
         self.helpBtnRect.topleft = self.helpBtnPos
 
     def show(self, window):
-        
+        from common import MAIN_MENU_BG, MENU_TITLE
 
         window.blit(MAIN_MENU_BG, (0, 0))
         window.blit(self.playBtn, self.playBtnPos)
@@ -169,6 +132,19 @@ class MainMenu():
 
 class PauseMenu():
     def __init__(self) -> None:
+        from pygame import font as pg_font
+        from pygame import transform as pg_transform
+        from common import (
+            FONT2,
+            PAUSE_TEXT,
+            RESTART_BTN,
+            RESUME_BTN,
+            EXIT_BTN,
+            WHITE_TEXT,
+            WIN_W,
+
+        )
+
         self.font = pg_font.Font(FONT2, 28)
 
 
@@ -214,6 +190,19 @@ class PauseMenu():
 
 class FailedScreen():
     def __init__(self) -> None:
+        # import
+        from common import (
+            FONT2,
+            RESTART_BTN,
+            EXIT_BTN,
+            WHITE_TEXT,
+            WIN_W,
+            FAILED_SCREEN_TITLE,
+            GAME_OVER_SOUND,
+        )
+        from pygame import transform as pg_transform
+        from pygame import mixer as pg_mixer
+        from pygame import font as pg_font
         # fonts
         font = pg_font.Font(FONT2, 28)
 
@@ -246,6 +235,7 @@ class FailedScreen():
         # is audio played?
         self.audioPlayed = False
     def show(self, window):
+        from common import BACKGROUND_IMAGE, PAUSE_BACKGROUND, FAILED_SCREEN_TITLE
         window.blit(BACKGROUND_IMAGE, (0, 0))
         window.blit(PAUSE_BACKGROUND, (0, 0))
         window.blit(FAILED_SCREEN_TITLE, self.titlePos)
@@ -261,17 +251,35 @@ class FailedScreen():
 
 class ShowFinalScore():
     def __init__(self, ln, sn, scr, name):
+        from common import (
+            FONT,
+            FONT2
+        )
+        from pygame import font as pg_font
+
         self.ln = ln
         self.sn = sn
         self.scr = scr
         self.name = name
         self.font = pg_font.Font(FONT, 40)
-        self.font2 = pg_font.Font(FONT, 63)
+        self.font2 = pg_font.Font(FONT, 67)
         self.font3 = pg_font.Font(FONT2, 20)
 
         self.counterProg = 0
 
     def show(self, window):
+            from common import (
+                WHITE_TEXT,
+                BACKGROUND_IMAGE,
+                PAUSE_BACKGROUND,
+                FINAL_SCORE_TITLE,
+                WIN_W,
+                LARGE_NOTE_SPRITE,
+                SMALL_NOTE_SPRITE,
+                WIN_H,
+                TAP_PROMPT
+            )
+
             self.counterProg += 0.03
             if self.counterProg >= 1:
                 self.counterProg = 1
@@ -288,17 +296,23 @@ class ShowFinalScore():
             
             window.blit(self.nameDisp, ((WIN_W - self.nameDisp.get_width()) / 2, 175))
             
-            window.blit(LARGE_NOTE_SPRITE, ((WIN_W / 2 - self.lnDisp.get_width() - LARGE_NOTE_SPRITE.get_width()) / 2, (WIN_H - LARGE_NOTE_SPRITE.get_height()) / 2 - 70))
-            window.blit(self.lnDisp, ((WIN_W / 2 - self.lnDisp.get_width() + LARGE_NOTE_SPRITE.get_width()) / 2, (WIN_H - self.lnDisp.get_height()) / 2 - 70))
+            window.blit(LARGE_NOTE_SPRITE, ((WIN_W / 2 - self.lnDisp.get_width() - LARGE_NOTE_SPRITE.get_width()) / 2, (WIN_H - LARGE_NOTE_SPRITE.get_height()) / 2 - 75))
+            window.blit(self.lnDisp, ((WIN_W / 2 - self.lnDisp.get_width() + LARGE_NOTE_SPRITE.get_width()) / 2, (WIN_H - self.lnDisp.get_height()) / 2 - 75))
 
-            window.blit(SMALL_NOTE_SPRITE, ((WIN_W / 2 - self.snDisp.get_width() - SMALL_NOTE_SPRITE.get_width()) / 2 + (WIN_W / 2), (WIN_H - SMALL_NOTE_SPRITE.get_height()) / 2 - 70))
-            window.blit(self.snDisp, ((WIN_W / 2 - self.snDisp.get_width() + SMALL_NOTE_SPRITE.get_width()) / 2 + (WIN_W / 2), (WIN_H - self.snDisp.get_height()) / 2 - 70))
+            window.blit(SMALL_NOTE_SPRITE, ((WIN_W / 2 - self.snDisp.get_width() - SMALL_NOTE_SPRITE.get_width()) / 2 + (WIN_W / 2), (WIN_H - SMALL_NOTE_SPRITE.get_height()) / 2 - 75))
+            window.blit(self.snDisp, ((WIN_W / 2 - self.snDisp.get_width() + SMALL_NOTE_SPRITE.get_width()) / 2 + (WIN_W / 2), (WIN_H - self.snDisp.get_height()) / 2 - 75))
 
             window.blit(TAP_PROMPT, ((WIN_W - TAP_PROMPT.get_width()) / 2, WIN_H - 10 - TAP_PROMPT.get_height()))
-            window.blit(self.scrDisp, ((WIN_W - self.scrDisp.get_width()) / 2, (WIN_H - self.scrDisp.get_width()) / 2 + 80))
+            window.blit(self.scrDisp, ((WIN_W - self.scrDisp.get_width()) / 2, (WIN_H - self.scrDisp.get_height()) / 2 + 70))
 
 class PauseCountdown():
     def __init__(self) -> None:
+        from pygame import font as pg_font
+        from common import (
+            FONT2,
+            WHITE_TEXT,
+            WIN_W,
+        )
 
         self.font = pg_font.Font(FONT2, 28)
         self.countdownText = self.font.render("Game will start in...", True, WHITE_TEXT)
@@ -306,6 +320,11 @@ class PauseCountdown():
         self.countdownTextPos = ((WIN_W - self.countdownTextRect.width) / 2, 50)
         self.i = 0
     def countdown(self, window) -> None:
+        from common import (
+            RESUME_COUNTDOWN_SPRITES,
+            WIN_W,
+            PAUSE_BACKGROUND
+        )
 
         self.image = RESUME_COUNTDOWN_SPRITES[int(self.i / 40)]
         self.rect = self.image.get_rect()
@@ -316,9 +335,11 @@ class PauseCountdown():
         window.blit(self.image, (self.x, self.y))
 
 
+
 ### GAME OBJECTS
 class Pad():
     def __init__(self, x, y):
+        from common import PAD_SPRITE
 
         self.x = x
         self.y = y
@@ -330,12 +351,17 @@ class Pad():
 
 class BaseNote():
     def update(self, bpm, fps):
-        
+        from common import (
+            PAD_Y_POS,
+            SPEED_MULTIPLIER,
+        )
         self.y += PAD_Y_POS / ((1 / SPEED_MULTIPLIER) / bpm) / fps
 
 class LargeNote(BaseNote):
     def __init__(self, x, y):
-        
+        from common import LARGE_NOTE_SPRITE
+        from pygame import rect as pg_rect
+
         self.x = x
         self.y = y
         self.image = LARGE_NOTE_SPRITE
@@ -343,7 +369,8 @@ class LargeNote(BaseNote):
         
 class SmallNote(BaseNote):
     def __init__(self, x, y):
-        
+        from common import SMALL_NOTE_SPRITE
+
         self.x = x
         self.y = y
         self.image = SMALL_NOTE_SPRITE
@@ -353,31 +380,43 @@ class SmallNote(BaseNote):
 ### VISUAL EFFECTS
 class Effect():
     def __init__(self, window, x, y, t, padX = None) -> None:
+        from common import (
+            HIT_FX_SPRITE, MISS_FX_SPRITE
+        )
+        from customTypes import HitState
+        from pygame import BLEND_RGBA_MULT
+
         self.img = 0
         self.alpha = 255
         self.t = t
         self.x = x
         self.y = y
         self.padX = padX
+        self.sprites = [HIT_FX_SPRITE, MISS_FX_SPRITE]
+        self.hitState = HitState
+        self.blend = BLEND_RGBA_MULT
     def update(self):
 
         if self.alpha > 0:
             
-            if self.t == HitState.Hit:
-                self.img = HIT_FX_SPRITE
-            elif self.t == HitState.Miss:
-                self.img = MISS_FX_SPRITE
+            if self.t == self.hitState.Hit:
+                self.img = self.sprites[0]
+            elif self.t == self.hitState.Miss:
+                self.img = self.sprites[1]
             self.img = self.img.convert_alpha()
-            self.img.fill((255, 255, 255, self.alpha), None, BLEND_RGBA_MULT)
+            self.img.fill((255, 255, 255, self.alpha), None, self.blend)
             self.alpha -= 20
 
 class LowHPWarning():
     def __init__(self) -> None:
+        from common import LOW_HP_WARNING_FX
+        from pygame import BLEND_RGBA_MULT
 
         self.image = LOW_HP_WARNING_FX
         self.alpha = 255
         self.glowing = True
         self.hidden = False
+        self.blend = BLEND_RGBA_MULT
     def update(self):
         if self.hidden:
             self.alpha = 255
@@ -389,32 +428,37 @@ class LowHPWarning():
             self.glowing = True
         
         if self.glowing:
-            self.alpha += 18
+            self.alpha += 13
         elif not self.glowing:
-            self.alpha -= 18
+            self.alpha -= 13
     def hide(self):
         self.alpha = 0
         self.hidden = True
         
     def render(self, window):
         self.i = self.image.copy()
-        self.i.fill((255, 255, 255, self.alpha), None, BLEND_RGBA_MULT)
+        self.i.fill((255, 255, 255, self.alpha), None, self.blend)
         window.blit(self.i, (0, 0))
 
 class ScoreDisp():
     def __init__(self, t) -> None:
+        from pygame import BLEND_RGBA_MULT
+        from common import SMALL_NOTE_SCORE, LARGE_NOTE_SCORE
+
         self.alpha = 255
         self.t = t
+        self.snScore = SMALL_NOTE_SCORE
+        self.lnScore = LARGE_NOTE_SCORE
+        self.blend = BLEND_RGBA_MULT
 
     def show(self):
 
         if self.alpha > 0:
             if self.t == "SmallNote":
-                self.img = SMALL_NOTE_SCORE
+                self.img = self.snScore
             elif self.t == "LargeNote":
-                self.img = LARGE_NOTE_SCORE
+                self.img = self.lnScore
             self.rect = self.img.get_rect()
             self.img = self.img.convert_alpha()
-            self.img.fill((255, 255, 255, self.alpha), None, BLEND_RGBA_MULT)
+            self.img.fill((255, 255, 255, self.alpha), None, self.blend)
             self.alpha -= 20
-

@@ -1,20 +1,37 @@
 import os
-import pygame
-
-pygame.init()
-pygame.display.init()
-
+from pygame import quit as pg_quit
+from pygame import mixer as pg_mix
+from pygame import rect as pg_rect
+from pygame import init as pg_init
+from pygame import display as pg_disp
+from pygame import time as pg_time
+from pygame import (
+    DOUBLEBUF,
+    HWACCEL,
+    QUIT,
+    MOUSEBUTTONDOWN,
+    SCALED,
+    K_e,
+    K_ESCAPE,
+    K_r,
+    KEYDOWN
+    
+)
+from pygame import font as pg_font
+from pygame import event as pg_ev
+from pygame import transform as pg_transform
+from pygame.mouse import get_pos as pg_mouse_get_pos
 
 def helpPage():
     print("Importing constants...")
     from common import WIN_W, WIN_H, WHITE_TEXT, FPS, PAUSE_BACKGROUND, FONT2, HELP_TEXT, GUIDE_TITLE, MAIN_MENU_BG, HELP_IMG, TAP_PROMPT
-    
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL | pygame.DOUBLEBUF)
-    clock = pygame.time.Clock()
+
+    display = pg_disp.set_mode((WIN_W, WIN_H), HWACCEL | DOUBLEBUF)
+    clock = pg_time.Clock()
 
     # dark overlay
     darkOverlay = PAUSE_BACKGROUND
-    font = pygame.font.Font(FONT2, 20)
+    font = pg_font.Font(FONT2, 20)
 
     texts = HELP_TEXT
     # guide title:
@@ -22,10 +39,10 @@ def helpPage():
     # page count
     page = 0
     while True:
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
+        for e in pg_ev.get():
+            if e.type == QUIT:
                 return None
-            elif e.type == pygame.MOUSEBUTTONDOWN:
+            elif e.type == MOUSEBUTTONDOWN:
                 page += 1
                 if page >= len(HELP_TEXT):
                     return None
@@ -46,17 +63,17 @@ def helpPage():
             display.blit(lineRenderer, ((WIN_W - lineRenderer.get_rect().width) / 2, guideTitleRect.height + spacing * 1.5 + helpImgRect.height))
 
         display.blit(TAP_PROMPT, ((WIN_W - TAP_PROMPT.get_width()) / 2, WIN_H - TAP_PROMPT.get_height() - 4))
-        pygame.display.flip()
+        pg_disp.flip()
         clock.tick()
     
 def licensePage():
     print("Importing constants...")
     from common import WIN_W, WIN_H, FONT2, PAUSE_BACKGROUND, VERSION_STRING, WHITE_TEXT, MENU_TITLE, LINK_COLOR, CWD, THIRD_PARTY_LIBS_LICENSE, ATTRIBUTION_TEXT, BACKGROUND_IMAGE, TAP_PROMPT, FPS, LICENSE
     from utils import textWrap
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL | pygame.DOUBLEBUF)
-    clock = pygame.time.Clock()
-    font = pygame.font.Font(FONT2, 22)
-    font2 = pygame.font.Font(FONT2, 22)
+    display = pg_disp.set_mode((WIN_W, WIN_H), HWACCEL | DOUBLEBUF)
+    clock = pg_time.Clock()
+    font = pg_font.Font(FONT2, 22)
+    font2 = pg_font.Font(FONT2, 22)
 
     font.set_bold(True)
 
@@ -70,7 +87,7 @@ def licensePage():
     copyrightText = font2.render("Copyright (C) 2022 Huy Nguyen", True, WHITE_TEXT)
     
     # resized menu title
-    smallMenuTitle = pygame.transform.smoothscale(MENU_TITLE, (MENU_TITLE.get_width() * 0.65, MENU_TITLE.get_height() * 0.65))
+    smallMenuTitle = pg_transform.smoothscale(MENU_TITLE, (MENU_TITLE.get_width() * 0.65, MENU_TITLE.get_height() * 0.65))
     
     # license info box
     left = 20
@@ -89,11 +106,11 @@ def licensePage():
     link2Rect = link2.get_rect()
 
     while True:
-        mouse = pygame.mouse.get_pos()
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
+        mouse = pg_mouse_get_pos()
+        for e in pg_ev.get():
+            if e.type == QUIT:
                 return None
-            elif e.type == pygame.MOUSEBUTTONDOWN:
+            elif e.type == MOUSEBUTTONDOWN:
                 if link1Rect.collidepoint(mouse):
                     os.startfile(os.path.join(CWD, THIRD_PARTY_LIBS_LICENSE))
                 elif link2Rect.collidepoint(mouse):
@@ -110,7 +127,7 @@ def licensePage():
         y = 0
 
         for l in LICENSE:
-            y += textWrap(display, l, WHITE_TEXT, pygame.rect.Rect(left, top + y, width, height), font2, True, None)
+            y += textWrap(display, l, WHITE_TEXT, pg_rect.Rect(left, top + y, width, height), font2, True, None)
 
         
         link1Rect.topleft = (20, 42 + y + smallMenuTitle.get_height() + name.get_rect().height * 1.5 + shortDesc.get_rect().height * 1.5 + copyrightText.get_height() * 1.5)
@@ -119,7 +136,7 @@ def licensePage():
         display.blit(link1, link1Rect.topleft)
         display.blit(link2, link2Rect.topleft)
         
-        pygame.display.flip()
+        pg_disp.flip()
         clock.tick(FPS)
 def mainMenu():
     print("Importing constants....")
@@ -130,14 +147,14 @@ def mainMenu():
     from customTypes import Part
     
     _mainMenu = MainMenu()
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL)
-    clock = pygame.time.Clock()
+    display = pg_disp.set_mode((WIN_W, WIN_H), HWACCEL)
+    clock = pg_time.Clock()
     while True:
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
+        for e in pg_ev.get():
+            if e.type == QUIT:
                 return None, Part.Exit
-            elif e.type == pygame.MOUSEBUTTONDOWN:
-                mousePos = pygame.mouse.get_pos()
+            elif e.type == MOUSEBUTTONDOWN:
+                mousePos = pg_mouse_get_pos()
                 if _mainMenu.playBtnRect.collidepoint(mousePos):
                     f = tkinter.filedialog.askopenfilename(title = "Select a song to play...", initialdir=MUSIC_FOLDER)
                     if f == "" or f == None:
@@ -145,7 +162,7 @@ def mainMenu():
                     else:
                         display.blit(PAUSE_BACKGROUND, (0, 0))
                         display.blit(LOADING_ICON, ((WIN_W - LOADING_ICON.get_width()) / 2, (WIN_H - LOADING_ICON.get_width()) / 2))
-                        pygame.display.flip()
+                        pg_disp.flip()
                         return f, Part.Play
                 elif _mainMenu.helpBtnRect.collidepoint(mousePos):
                     return None, Part.Help
@@ -153,7 +170,7 @@ def mainMenu():
                     return None, Part.About
         
         _mainMenu.show(display)
-        pygame.display.flip()
+        pg_disp.flip()
         clock.tick(FPS)
 
 def analyze(f):
@@ -163,12 +180,11 @@ def analyze(f):
     audioObj = AudioAnalyzer(f)
     songName = audioObj.loadIntoLibrosa()
     noteStartList = audioObj.detectNotes()
+    bpm = audioObj.calcBPM()
     smallNoteStartList = audioObj.detectSmallNotes()
 
     # chorus detection feature will be implemented in the future
     chorusStartTime = None
-    
-    bpm = audioObj.calcBPM()
 
     return songName, noteStartList, smallNoteStartList, chorusStartTime, bpm
 
@@ -178,16 +194,18 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
     from common import HP_DEPLETION_RATE, LINK_COLOR
     print("Loading entities...")
     from entities import LargeNote, SmallNote, PauseMenu, PauseCountdown, Pad, Effect, ScoreDisp, LowHPWarning
-    from utils import randomRange, cleanup
+    from utils import randomRange
     from customTypes import PauseState, ExitReason, HitState
     import random
+    from os import path as os_path
+    from os import remove as os_rem
 
-    pygame.mixer.music.load("temp2.wav")
+    pg_mix.music.load("temp2.wav")
     # create pygame window
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL | pygame.SCALED, 0, 0, 1)
+    display = pg_disp.set_mode((WIN_W, WIN_H), HWACCEL | SCALED, 0, 0, 1)
 
     # create pygame clock object
-    clock = pygame.time.Clock()
+    clock = pg_time.Clock()
 
     largenotes = []
     smallnotes = []
@@ -245,57 +263,59 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
     hp = 80
 
     # init fonts
-    font = pygame.font.Font(FONT, 30)
-    font2 = pygame.font.Font(FONT2, 15)
+    font = pg_font.Font(FONT, 30)
+    font2 = pg_font.Font(FONT2, 15)
 
     # init warning var
     warning = LowHPWarning()
 
-    pygame.mixer.music.play()
+    pg_mix.music.play()
     while running:
         
         # fill display with black
-        events = pygame.event.get()
-        mouseX, mouseY = pygame.mouse.get_pos()
+        events = pg_ev.get()
+        mouseX, mouseY = pg_mouse_get_pos()
         
         for e in events:
             # keypress
-            if e.type == pygame.KEYDOWN:
+            if e.type == KEYDOWN:
                 # esc pressed
-                if e.key == pygame.K_ESCAPE:
+                if e.key == K_ESCAPE:
                     if paused == PauseState.NotPausing:
                         paused = PauseState.Pausing
                         pauseTextDrawn = False
                     elif paused == PauseState.Pausing:
                         paused = PauseState.Waiting
                 # r key pressed
-                elif e.key == pygame.K_r:
+                elif e.key == K_r:
                     if paused == PauseState.Pausing:
-                        pygame.mixer.music.stop()
-                        pygame.mixer.music.unload()
+                        pg_mix.music.stop()
+                        pg_mix.music.unload()
                         # loading icon
                         loadingIconRect = LOADING_ICON.get_rect()
                         display.blit(PAUSE_BACKGROUND, (0, 0))
                         display.blit(LOADING_ICON, ((WIN_W - loadingIconRect.width) / 2, (WIN_H - loadingIconRect.height) / 2))
-                        pygame.display.flip()
+                        pg_disp.flip()
                         return ExitReason.Restart, None, None, None
                         
-                elif e.key == pygame.K_e and paused == PauseState.Pausing:
-                    pygame.mixer.music.stop()
-                    pygame.mixer.music.unload()
+                elif e.key == K_e and paused == PauseState.Pausing:
+                    pg_mix.music.stop()
+                    pg_mix.music.unload()
                     return ExitReason.Exit, None, None, None
 
             # game exit
-            elif e.type == pygame.QUIT:
-                pygame.mixer.music.stop()
-                pygame.mixer.music.unload()
-                cleanup("temp.wav")
-                cleanup("temp2.wav")
+            elif e.type == QUIT:
+                pg_mix.music.stop()
+                pg_mix.music.unload()
+                for i in range["temp.wav", "temp2.wav"]:
+                    if os_path.exists(i):
+                        os_rem(i)
+
                 return ExitReason.Exit, None, None, None
                 
 
             #mouse click
-            elif e.type == pygame.MOUSEBUTTONDOWN:
+            elif e.type == MOUSEBUTTONDOWN:
                 if paused == PauseState.Pausing:
                     # click on resume btn to unpause the game
                     if pauseText.resumeBtnRect.collidepoint(mouseX, mouseY):
@@ -303,16 +323,16 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
                         pauseTextDrawn = False
                     # click on restart btn to restart the game
                     elif pauseText.restartBtnRect.collidepoint(mouseX, mouseY):
-                        pygame.mixer.music.stop()
-                        pygame.mixer.music.unload()
+                        pg_mix.music.stop()
+                        pg_mix.music.unload()
                         loadingIconRect = LOADING_ICON.get_rect()
                         display.blit(PAUSE_BACKGROUND, (0, 0))
                         display.blit(LOADING_ICON, ((WIN_W - loadingIconRect.width) / 2, (WIN_H - loadingIconRect.height) / 2))
-                        pygame.display.flip()
+                        pg_disp.flip()
                         return ExitReason.Restart, None, None, None
                     elif pauseText.exitBtnRect.collidepoint(mouseX, mouseY):
-                        pygame.mixer.music.stop()
-                        pygame.mixer.music.unload()
+                        pg_mix.music.stop()
+                        pg_mix.music.unload()
                         return ExitReason.Exit, None, None, None
         
         # game is running
@@ -369,20 +389,20 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
 
             if hp > 100:
                 hp = 100
-            elif 100 >= hp > 32:
+            elif 100 >= hp > 35:
                 warning.hide()
-            elif 32 >= hp >= 0:
+            elif 35 >= hp >= 0:
                 warning.update()
             elif 0 > hp:
-                pygame.mixer.music.stop()
-                pygame.mixer.music.unload()
+                pg_mix.music.stop()
+                pg_mix.music.unload()
                 return ExitReason.Failed, None, None, None
 
 
             score = largeNoteCount * 200 + smallNoteCount * 100
             scoreDisp = font.render(f"{str(score).zfill(9)}", True, WHITE_TEXT)
             hpDisp = font.render(f"{round(hp)}%", True, LINK_COLOR)
-            songNameDisp = font2.render(songName, True, pygame.color.Color(WHITE_TEXT))
+            songNameDisp = font2.render(songName, True, WHITE_TEXT)
 
             if not warning.hidden:
                 warning.render(display)
@@ -393,9 +413,9 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
             pad.render(display)
         elif paused == PauseState.Pausing:
             if not pauseTextDrawn:
-                pygame.mixer.music.pause()
+                pg_mix.music.pause()
                 scoreDisp = font.render(f"{str(score).zfill(9)}", True, WHITE_TEXT)
-                songNameDisp = font2.render(songName, True, pygame.color.Color(WHITE_TEXT))
+                songNameDisp = font2.render(songName, True, WHITE_TEXT)
                 display.blit(scoreDisp, (10, 10))
                 display.blit(songNameDisp, (10, WIN_H - 30))
                 display.blit(PAUSE_BACKGROUND, (0, 0)) 
@@ -413,38 +433,38 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
                 ctd.i += 1
                 ctd.countdown(display)
             else:
-                pygame.mixer.music.unpause()
+                pg_mix.music.unpause()
                 paused = PauseState.NotPausing
                 ctd.i = 0
 
         # exit game if window is closed or song is ended
-        if not pygame.mixer.music.get_busy() and paused == PauseState.NotPausing:
+        if not pg_mix.music.get_busy() and paused == PauseState.NotPausing:
             
             notes = []
             display.blit((BACKGROUND_IMAGE), (0, 0))
             scoreDisp = font.render(f"{str(score).zfill(9)}", True, WHITE_TEXT)
-            songNameDisp = font2.render(songName, True, pygame.color.Color(WHITE_TEXT))
-            pygame.mixer.music.stop()
-            pygame.mixer.music.unload()
+            songNameDisp = font2.render(songName, True, WHITE_TEXT)
+            pg_mix.music.stop()
+            pg_mix.music.unload()
             return ExitReason.Finish, smallNoteCount, largeNoteCount, score
         
         
         
-        pygame.display.flip()
+        pg_disp.flip()
         clock.tick(FPS)
 
 def showFinalScore(ln, sn, scr, name):
     from entities import ShowFinalScore
     from common import FPS, WIN_H, WIN_W
-    display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWACCEL)
+    display = pg_disp.set_mode((WIN_W, WIN_H), HWACCEL)
     showFinalScore = ShowFinalScore(ln, sn, scr, name)
-    clock = pygame.time.Clock()
+    clock = pg_time.Clock()
     while 1:
-        for e in pygame.event.get():
-            if e.type == pygame.MOUSEBUTTONDOWN or e.type == pygame.QUIT:
+        for e in pg_ev.get():
+            if e.type == MOUSEBUTTONDOWN or e.type == QUIT:
                 return None
         showFinalScore.show(display)
-        pygame.display.flip()
+        pg_disp.flip()
         clock.tick(FPS)
 
 def failedScreen():
@@ -452,35 +472,35 @@ def failedScreen():
     from common import WIN_H, WIN_W, FPS, PAUSE_BACKGROUND, LOADING_ICON
     from customTypes import ExitReason
 
-    display = pygame.display.set_mode((WIN_W, WIN_H))
-    clock = pygame.time.Clock()
+    display = pg_disp.set_mode((WIN_W, WIN_H))
+    clock = pg_time.Clock()
     failedScreen = FailedScreen()
     while 1:
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
+        for e in pg_ev.get():
+            if e.type == QUIT:
                 break
-            elif e.type == pygame.MOUSEBUTTONDOWN:
-                mouse = pygame.mouse.get_pos()
+            elif e.type == MOUSEBUTTONDOWN:
+                mouse = pg_mouse_get_pos()
                 if failedScreen.exitBtnRect.collidepoint(mouse):
                     return ExitReason.Exit
                 elif failedScreen.retryBtnRect.collidepoint(mouse):
                     display.blit(PAUSE_BACKGROUND, (0, 0))
                     display.blit(LOADING_ICON, ((WIN_W - LOADING_ICON.get_width()) / 2, (WIN_H - LOADING_ICON.get_height()) / 2))
-                    pygame.display.flip()
+                    pg_disp.flip()
                     return ExitReason.Restart
         failedScreen.playAudio()
         failedScreen.show(display)
-        pygame.display.flip()
+        pg_disp.flip()
         clock.tick(FPS)
 
 if __name__ == "__main__":
     
     from customTypes import ExitReason, Part
     from common import AUDIO_FREQ, AUDIO_CHANNELS, AUDIO_BUFFER_SIZE
-    pygame.mixer.pre_init(AUDIO_FREQ, 16, AUDIO_CHANNELS, AUDIO_BUFFER_SIZE)
+    pg_mix.pre_init(AUDIO_FREQ, 16, AUDIO_CHANNELS, AUDIO_BUFFER_SIZE)
 
-    pygame.init()
-    pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN])
+    pg_init()
+    pg_ev.set_allowed([QUIT, MOUSEBUTTONDOWN, KEYDOWN])
     # display file dialog
     while True:
         f, part = mainMenu()
@@ -512,6 +532,6 @@ if __name__ == "__main__":
         elif part == Part.Exit:   
             break
         
-    pygame.quit()
+    pg_quit()
     
     quit()

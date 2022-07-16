@@ -1,19 +1,15 @@
-from os import path, remove
-import wave
-import pygame.rect
+from pygame import rect as pg_rect
 from common import WIN_W
-from common import ROUNDING_DIGITS
-from random import randint
 
-def cleanup(f: str):
-    if path.exists(f):
-        print("Cleaning up...")
-        remove(f)
 
 def numberRounding(x: float) -> float:
+    from common import ROUNDING_DIGITS
+
     return round(x, ROUNDING_DIGITS)
 
 def randomRange(x: int, i: int) -> int:
+    from random import randint
+
     minimum, maximum = x - i, x + i
     if minimum < 10:
         minimum = 10
@@ -23,6 +19,8 @@ def randomRange(x: int, i: int) -> int:
 
 # code adapted from https://www.thepythoncode.com/article/concatenate-audio-files-in-python 
 def concatenateAudio(clipPaths):
+    import wave
+
     data = []
     for c in clipPaths:
         with wave.open(c, "rb") as w:
@@ -38,7 +36,7 @@ def concatenateAudio(clipPaths):
 # returns any text that didn't get blitted
 def textWrap(surface, text, color, rect, font, aa=False, bkg=None):
     textBoxHeight = 0
-    rect = pygame.rect.Rect(rect)
+    rect = pg_rect.Rect(rect)
     y = rect.top
     lineSpacing = 6
 
