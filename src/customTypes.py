@@ -24,3 +24,4 @@ class ExitReason(Enum):
     Finish = 301
     Restart = 302
     Failed = 303
+

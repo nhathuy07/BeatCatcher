@@ -4,7 +4,6 @@ from os import path as os_path
 from pygame import init as pg_init
 from pygame import display as pg_disp
 
-from common import HIT_FX_SPRITE, MISS_FX_SPRITE
 
 pg_init()
 pg_disp.init()
@@ -334,8 +333,41 @@ class PauseCountdown():
         window.blit(self.countdownText, self.countdownTextPos)
         window.blit(self.image, (self.x, self.y))
 
+class HelpScr():
+    def __init__(self):
+        from common import FONT2
+        from pygame import font as pg_font
+        self.page = 0
+        self.spacing = 10
+        self.font = pg_font.Font(FONT2, 20)
+    def flipPage(self):
+        self.page += 1
+        
+    def show(self, display):
+        from common import (
+            WIN_W, WIN_H,
+            WHITE_TEXT,
+            PAUSE_BACKGROUND,
+            HELP_TEXT,
+            GUIDE_TITLE,
+            MAIN_MENU_BG,
+            HELP_IMG,
+            TAP_PROMPT
+        )
+        display.blit(MAIN_MENU_BG, (0, 0))
+        display.blit(PAUSE_BACKGROUND, (0, 0))
+        display.blit(GUIDE_TITLE, ((WIN_W - GUIDE_TITLE.get_width()) / 2, 20))
+        display.blit(HELP_IMG[self.page], ((WIN_W - HELP_IMG[self.page].get_width()) / 2, GUIDE_TITLE.get_height() + 30))
 
+        _t = HELP_TEXT[self.page].split("|")
+        self.spacing = 10
+        for line in _t:
+            lineRenderer = self.font.render(line, True, WHITE_TEXT)
+            self.spacing += lineRenderer.get_height()
+            display.blit(lineRenderer, ((WIN_W - lineRenderer.get_width()) / 2, GUIDE_TITLE.get_height() + HELP_IMG[self.page].get_height() + self.spacing * 1.5))
+        display.blit(TAP_PROMPT, ((WIN_W - TAP_PROMPT.get_width()) / 2, WIN_H - TAP_PROMPT.get_height() - 4))
 
+    
 ### GAME OBJECTS
 class Pad():
     def __init__(self, x, y):

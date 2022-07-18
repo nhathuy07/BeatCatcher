@@ -1,4 +1,6 @@
-import os
+from os import startfile as os_startfl
+from os import path as os_path
+from os import remove as os_rem
 from pygame import quit as pg_quit
 from pygame import mixer as pg_mix
 from pygame import rect as pg_rect
@@ -22,49 +24,26 @@ from pygame import event as pg_ev
 from pygame import transform as pg_transform
 from pygame.mouse import get_pos as pg_mouse_get_pos
 
+from common import HELP_IMG
+
 def helpPage():
     print("Importing constants...")
-    from common import WIN_W, WIN_H, WHITE_TEXT, FPS, PAUSE_BACKGROUND, FONT2, HELP_TEXT, GUIDE_TITLE, MAIN_MENU_BG, HELP_IMG, TAP_PROMPT
+    from common import WIN_W, WIN_H, FPS
+    from entities import HelpScr
 
     display = pg_disp.set_mode((WIN_W, WIN_H), HWACCEL | DOUBLEBUF)
     clock = pg_time.Clock()
-
-    # dark overlay
-    darkOverlay = PAUSE_BACKGROUND
-    font = pg_font.Font(FONT2, 20)
-
-    texts = HELP_TEXT
-    # guide title:
-    guideTitleRect = GUIDE_TITLE.get_rect()
-    # page count
-    page = 0
-    while True:
+    helpScr = HelpScr()
+    while 1:
         for e in pg_ev.get():
-            if e.type == QUIT:
-                return None
-            elif e.type == MOUSEBUTTONDOWN:
-                page += 1
-                if page >= len(HELP_TEXT):
+            if e.type == MOUSEBUTTONDOWN:
+                if helpScr.page < len(HELP_IMG) - 1:
+                    helpScr.flipPage()
+                else:
                     return None
-        display.blit(MAIN_MENU_BG, (0, 0))
-        display.blit(darkOverlay, (0, 0))
-        display.blit(GUIDE_TITLE, ((WIN_W - GUIDE_TITLE.get_width()) / 2, 20))
-        
-        # generate rect for image and text
-        helpImgRect = HELP_IMG[page].get_rect()
-        display.blit(HELP_IMG[page], ((WIN_W - HELP_IMG[page].get_width()) / 2, guideTitleRect.height + 30))
-        
-
-        _t = texts[page].split("|")
-        spacing = 10
-        for line in _t:
-            lineRenderer = font.render(line, True, WHITE_TEXT)
-            spacing += lineRenderer.get_rect().height
-            display.blit(lineRenderer, ((WIN_W - lineRenderer.get_rect().width) / 2, guideTitleRect.height + spacing * 1.5 + helpImgRect.height))
-
-        display.blit(TAP_PROMPT, ((WIN_W - TAP_PROMPT.get_width()) / 2, WIN_H - TAP_PROMPT.get_height() - 4))
+        helpScr.show(display)
         pg_disp.flip()
-        clock.tick()
+        clock.tick(FPS)
     
 def licensePage():
     print("Importing constants...")
@@ -112,9 +91,9 @@ def licensePage():
                 return None
             elif e.type == MOUSEBUTTONDOWN:
                 if link1Rect.collidepoint(mouse):
-                    os.startfile(os.path.join(CWD, THIRD_PARTY_LIBS_LICENSE))
+                    os_startfl(os_path.join(CWD, THIRD_PARTY_LIBS_LICENSE))
                 elif link2Rect.collidepoint(mouse):
-                    os.startfile(os.path.join(CWD, ATTRIBUTION_TEXT))
+                    os_startfl(os_path.join(CWD, ATTRIBUTION_TEXT))
                 else:
                     return None
         display.blit(BACKGROUND_IMAGE, (0, 0))
@@ -145,6 +124,12 @@ def mainMenu():
     print("Importing MainMenu module")
     from entities import MainMenu
     from customTypes import Part
+    from os import path as os_path
+    from os import remove as os_rem
+
+    for i in ["temp.wav", "temp2.wav"]:
+        if os_path.exists(i):
+            os_rem(i)
     
     _mainMenu = MainMenu()
     display = pg_disp.set_mode((WIN_W, WIN_H), HWACCEL)
@@ -191,7 +176,7 @@ def analyze(f):
 def session(f, songName, noteStartList, smallNoteStartList, bpm):
     print("Loading constants...")
     from common import WIN_W, WIN_H, PAD_Y_POS, SPEED_MULTIPLIER, FONT, FONT2, LOADING_ICON, PAUSE_BACKGROUND, BACKGROUND_IMAGE, FPS, WHITE_TEXT, LARGE_NOTE_SPRITE
-    from common import HP_DEPLETION_RATE, LINK_COLOR
+    from common import HP_DEPLETION_RATE, LINK_COLOR, HP_ICON
     print("Loading entities...")
     from entities import LargeNote, SmallNote, PauseMenu, PauseCountdown, Pad, Effect, ScoreDisp, LowHPWarning
     from utils import randomRange
@@ -307,7 +292,7 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
             elif e.type == QUIT:
                 pg_mix.music.stop()
                 pg_mix.music.unload()
-                for i in range["temp.wav", "temp2.wav"]:
+                for i in ["temp.wav", "temp2.wav"]:
                     if os_path.exists(i):
                         os_rem(i)
 
@@ -389,9 +374,9 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
 
             if hp > 100:
                 hp = 100
-            elif 100 >= hp > 35:
+            elif 100 >= hp > 40:
                 warning.hide()
-            elif 35 >= hp >= 0:
+            elif 40 >= hp >= 0:
                 warning.update()
             elif 0 > hp:
                 pg_mix.music.stop()
@@ -409,6 +394,7 @@ def session(f, songName, noteStartList, smallNoteStartList, bpm):
             display.blit(scoreDisp, (10, 10))
             display.blit(songNameDisp, (10, WIN_H - 30))
             display.blit(hpDisp, (WIN_W - hpDisp.get_width() - 10, 10))
+            display.blit(HP_ICON, (WIN_W - hpDisp.get_width() - 18 - HP_ICON.get_width(), 0))
 
             pad.render(display)
         elif paused == PauseState.Pausing:
@@ -510,8 +496,8 @@ if __name__ == "__main__":
                 r, sn, ln, scr = session(f, name, n, sn, bpm)
 
                 for i in ["temp.wav", "temp2.wav"]:
-                    if os.path.exists(i):
-                        os.remove(i)
+                    if os_path.exists(i):
+                        os_rem(i)
                 if r == ExitReason.Exit:         
                     break
                 elif r == ExitReason.Finish:

@@ -1,4 +1,3 @@
-
 from pygame import display
 from pygame.transform import smoothscale, scale
 from pygame import image as pg_image
@@ -87,17 +86,13 @@ MUSIC_FOLDER = path.join(getenv("USERPROFILE"), "Music")
 
 TAP_PROMPT = scale(pg_image.load("assets/tapPrompt.png").convert_alpha(), (400 * 0.75, 70 * 0.75))
 
-HELP_IMG = [
-    pg_image.load("assets/helpPage0.png").convert(),
-    pg_image.load("assets/helpPage1.png").convert_alpha(),
-    pg_image.load("assets/helpPage2.png").convert_alpha(),
-    pg_image.load("assets/helpPage3.png").convert_alpha()
-    ]
+HELP_IMG = [pg_image.load(f"assets/helpPage{n}.png").convert_alpha() for n in range(5)]
 
 HELP_TEXT = [
         "Press the Play button, then choose a song from the File Dialog|Non-WAV audio files may take longer to load, as they must be converted first.",
         "Throughout the game, Notes and Small Notes will fall from above|Move the pad with your mouse to catch the notes in tune to the rhythm of the song.",
         "Each Note gives 200 pts, while each Small Note gives 100 pts",
+        "Your HP level is displayed at the top-right corner of the window.|Your HP level will drop each time you miss a note, and increase each time you hit a note.|Try to keep the HP level above 0 till the end of the game to win.",
         "At the end of the song, the number of notes catched and your total score will be shown."
     ]
 
@@ -114,3 +109,5 @@ ATTRIBUTION_TEXT = "./assets/Extras/attribution.txt"
 CWD = getcwd()
 
 GAME_OVER_SOUND = Sound("assets/mixkit-sad-game-over-trombone-471.wav")
+
+HP_ICON = pg_image.load("assets/heart.png").convert_alpha()
