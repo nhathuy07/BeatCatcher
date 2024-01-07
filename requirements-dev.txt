@@ -1,2 +1,2 @@
-pyinstaller==5.2
+pyinstaller==5.13.1
 pipreqs==0.4.11
