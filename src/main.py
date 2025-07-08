@@ -1,6 +1,7 @@
 import os
 import pygame
 
+from time import time
 print("Importing utils...")
 from utils import cleanup, randomRange, textWrap, open_file_default_app, open_file_dialog
 
@@ -11,7 +12,7 @@ print("Importing random...")
 import random
 print("Importing custom types...")
 from customTypes import Part, ExitReason, PauseState, HitState
-
+from common import BUFFER_SEC
 
 pygame.init()
 pygame.display.init()
@@ -196,7 +197,7 @@ def analyze(f):
     from entities import AudioAnalyzer
     audioObj = AudioAnalyzer(f)
     print("load into librosa")
-    duration, songName, filepath = audioObj.loadIntoLibrosa()
+    duration, songName, filepath, converted = audioObj.loadIntoLibrosa()
     print("detecting notes")
     noteStartList = audioObj.detectNotes()
     print("detecting small notes")
@@ -212,7 +213,7 @@ def analyze(f):
 
     print("analyzation finished!")
 
-    return duration, songName, noteStartList, smallNoteStartList, chorusStartTime, bpm, filepath
+    return duration, songName, noteStartList, smallNoteStartList, chorusStartTime, bpm, filepath, converted
 
 def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm, filepath):
     print("Loading constants...")
@@ -222,7 +223,8 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm, fi
 
     pygame.mixer.init()
     pygame.mixer.music.load(filepath)
-    pygame.mixer.music.play()
+    
+    # pygame.mixer.music.play()
     # pygame.mixer.music.load("temp2.wav")
     # create pygame window
     display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWSURFACE)
@@ -290,8 +292,22 @@ def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm, fi
     font = pygame.font.Font(FONT, 30)
     font2 = pygame.font.Font(FONT2, 15)
 
+
+    
+    game_start_time = time()
+    buffer_sec = BUFFER_SEC
+    buffer_used = False
     pygame.mixer.music.play()
+    pygame.mixer.music.set_volume(0)
+    
     while running:
+
+        if not buffer_used:   
+            if time() - game_start_time >= buffer_sec:
+                
+                pygame.mixer.music.set_pos(0)
+                pygame.mixer.music.set_volume(1)
+                buffer_used = True
         
         # fill display with black
         events = pygame.event.get()
@@ -509,7 +525,7 @@ def showFinalScore(ln, sn, scr, name):
         clock.tick(FPS)
 if __name__ == "__main__":
     # clean up
-    cleanup("temp.wav")
+    # cleanup("temp.wav")
     pygame.init()
 
     from common import AUDIO_FREQ, AUDIO_CHANNELS, AUDIO_BUFFER_SIZE
@@ -521,10 +537,14 @@ if __name__ == "__main__":
         f, part = mainMenu()
         if part == Part.Play:
             while True:
-                d, name, n, sn, cst, bpm, filepath = analyze(f)
+                d, name, n, sn, cst, bpm, filepath, converted = analyze(f)
                 r, sn, ln, scr = session(f, d, name, n, sn, cst, bpm, filepath)
-                cleanup("temp.wav")
-                cleanup("temp2.wav")
+                # cleanup("temp.wav")
+                # cleanup("temp2.wav")
+                
+                if converted:
+                    cleanup(filepath)
+
                 if r == ExitReason.Exit:         
                     break
                 elif r == ExitReason.Finish:

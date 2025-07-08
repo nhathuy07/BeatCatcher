@@ -15,6 +15,8 @@ SPEED_MULTIPLIER = 0.015
 
 FPS = 240
 
+BUFFER_SEC = 1
+
 LARGE_NOTE_SPRITE = "assets/HitObject.png"
 SMALL_NOTE_SPRITE = "assets/HitObjectSmall.png"
 PAD_SPRITE = "assets/Pad.png"

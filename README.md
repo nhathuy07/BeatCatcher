@@ -1,6 +1,8 @@
 # BeatCatcher
 A rhythm game that lets you use your own songs to play.
 
+> ⚠️ Supports .WAV files out-of-the-box. Support for other formats can be enabled by **installing ffmpeg** on your computer.
+
 ## Summary
 BeatCatcher is a rhythm game with simple mechanics. In this game, you get to choose a song stored on your computer. As the game starts, notes will begin to fall from above in tune with the rhythm of the song. Using your mouse, try to catch as many notes as possible before the song ends.
 

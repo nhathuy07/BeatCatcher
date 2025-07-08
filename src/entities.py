@@ -1,6 +1,6 @@
 import subprocess
 import librosa
-from common import EXIT_BTN, HIT_FX_SPRITE, LARGE_NOTE_SCORE, LARGE_NOTE_SPRITE, LONG_NOTE_MINIMUM_DURATION, MISS_FX_SPRITE, PAD_SPRITE, PAUSE_BACKGROUND, PAUSE_TEXT, PROJECT_PATH, RESTART_BTN, RESUME_BTN, RESUME_COUNTDOWN_SPRITES, SMALL_NOTE_SCORE, SMALL_NOTE_SPRITE, SPEED_MULTIPLIER, PAD_Y_POS, WHITE_TEXT, WIN_W
+from common import BUFFER_SEC, EXIT_BTN, HIT_FX_SPRITE, LARGE_NOTE_SCORE, LARGE_NOTE_SPRITE, LONG_NOTE_MINIMUM_DURATION, MISS_FX_SPRITE, PAD_SPRITE, PAUSE_BACKGROUND, PAUSE_TEXT, PROJECT_PATH, RESTART_BTN, RESUME_BTN, RESUME_COUNTDOWN_SPRITES, SMALL_NOTE_SCORE, SMALL_NOTE_SPRITE, SPEED_MULTIPLIER, PAD_Y_POS, WHITE_TEXT, WIN_W
 from customTypes import *
 
 from utils import concatenateAudio, numberRounding, cleanup
@@ -29,13 +29,15 @@ class AudioAnalyzer():
         # song name
         self.songName = os.path.basename(self.fileName)
         # convert if not wav
+        converted = False
         if not self.fileName.endswith(".wav"):
             subprocess.run(args=['ffmpeg', '-i', self.fileName, f"{self.songName}.wav"])
             self.fileName = os.path.join(f"{self.songName}.wav")
+            converted = True
 
         # append file:
         # concatenateAudio(["assets/blank.wav", self.fileName])
-        cleanup(f"{self.songName}.wav")
+        # cleanup(f"{self.songName}.wav")
         # self.fileName = "temp2.wav"
         # load into librosa
         print(self.fileName)
@@ -44,20 +46,24 @@ class AudioAnalyzer():
         self.duration = librosa.get_duration(y = self.soundData, sr = self.sampleRate)
         self.oenv = librosa.onset.onset_strength(y=self.soundData, sr=self.sampleRate)
 
-        return self.duration, self.songName, self.fileName
+        return self.duration, self.songName, self.fileName, converted
     def calcBPM(self):
         bpm = float(librosa.beat.tempo(y=self.soundData, sr=self.sampleRate))
         return bpm
     
+    def add_buffer_delay_and_rounding(self, timestamp):
+        buffer = BUFFER_SEC
+        return numberRounding(timestamp) + buffer
+
     def detectNotes(self):
         self.noteStartList = librosa.onset.onset_detect(y=self.soundData, sr=self.sampleRate, normalize=True, backtrack=True)
         self.noteEndList = librosa.onset.onset_backtrack(self.noteStartList, self.oenv)
         
         self.noteStartList: numpy.array = librosa.frames_to_time(self.noteStartList, sr=self.sampleRate)
-        self.noteStartList: list = list(map(numberRounding,list(self.noteStartList)))
+        self.noteStartList: list = list(map(self.add_buffer_delay_and_rounding,list(self.noteStartList)))
 
         self.noteEndList: numpy.array = librosa.frames_to_time(self.noteEndList, sr=self.sampleRate)
-        self.noteEndList: list = list(map(numberRounding,list(self.noteEndList)))
+        self.noteEndList: list = list(map(self.add_buffer_delay_and_rounding,list(self.noteEndList)))
         return self.noteStartList
     
     def detectSmallNotes(self):
