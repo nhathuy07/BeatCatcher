@@ -4,6 +4,10 @@ import pygame.rect
 from common import WIN_W
 from common import ROUNDING_DIGITS
 import random
+import sys
+import subprocess
+
+from crossfiledialog import open_file
 
 def cleanup(f: str):
     if os.path.exists(f):
@@ -20,6 +24,25 @@ def randomRange(x: int, i: int) -> int:
     if maximum > WIN_W - 80:
         maximum = WIN_W - 80
     return random.randint(minimum, maximum)
+
+
+def open_file_dialog(title, initialdir):
+    return open_file(title, initialdir)
+
+
+
+def open_file_default_app(filepath):
+    """
+    Opens a file using its default application based on the operating system.
+    """
+    if sys.platform.startswith('darwin'):  # macOS
+        subprocess.call(('open', filepath))
+    elif sys.platform.startswith('win32'):  # Windows
+        subprocess.call(('start', filepath), shell=True)
+    elif sys.platform.startswith('linux'):  # Linux
+        subprocess.call(('xdg-open', filepath))
+    else:
+        print(f"Unsupported operating system: {sys.platform}")
 
 # code adapted from https://www.thepythoncode.com/article/concatenate-audio-files-in-python 
 def concatenateAudio(clipPaths):

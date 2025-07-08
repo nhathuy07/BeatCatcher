@@ -1,5 +1,6 @@
 import pygame
 import os
+import sys
 
 pygame.display.init()
 
@@ -58,7 +59,10 @@ PROJECT_PATH = (os.getcwd())
 
 FINAL_SCORE_TITLE = pygame.image.load("assets/final score (Custom).png")
 
-MUSIC_FOLDER = os.path.join(os.getenv("USERPROFILE"), "Music")
+if os.name == "nt":
+    MUSIC_FOLDER = os.path.join(os.getenv("USERPROFILE"), "Music")
+else:
+    MUSIC_FOLDER = os.path.join(os.getenv("HOME"), "Music")
 
 TAP_PROMPT = pygame.transform.smoothscale(pygame.image.load("assets/tapPrompt.png"), (400 * 0.75, 70 * 0.75))
 
@@ -87,3 +91,5 @@ THIRD_PARTY_LIBS_LICENSE = "./assets/Extras/thirdPartyLibsLicense.txt"
 ATTRIBUTION_TEXT = "./assets/Extras/attribution.txt"
 
 CWD = os.getcwd()
+
+

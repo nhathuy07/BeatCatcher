@@ -2,15 +2,16 @@ import os
 import pygame
 
 print("Importing utils...")
-from utils import cleanup, randomRange, textWrap
+from utils import cleanup, randomRange, textWrap, open_file_default_app, open_file_dialog
 
 #from entities import AudioAnalyzer, LargeNote, Pad, PauseCountdown, PauseMenu, ScoreDisp, SmallNote, Effect
 print("Importing filedialog...")
-import tkinter.filedialog
+# import tkinter.filedialog
 print("Importing random...")
 import random
 print("Importing custom types...")
 from customTypes import Part, ExitReason, PauseState, HitState
+
 
 pygame.init()
 pygame.display.init()
@@ -104,9 +105,9 @@ def licensePage():
                 return None
             elif e.type == pygame.MOUSEBUTTONDOWN:
                 if link1Rect.collidepoint(mouse):
-                    os.startfile(os.path.join(CWD, THIRD_PARTY_LIBS_LICENSE))
+                    open_file_default_app(os.path.join(CWD, THIRD_PARTY_LIBS_LICENSE))
                 elif link2Rect.collidepoint(mouse):
-                    os.startfile(os.path.join(CWD, ATTRIBUTION_TEXT))
+                    open_file_default_app(os.path.join(CWD, ATTRIBUTION_TEXT))
                 else:
                     return None
         display.blit(BACKGROUND_IMAGE, (0, 0))
@@ -163,7 +164,8 @@ def mainMenu():
             elif e.type == pygame.MOUSEBUTTONDOWN:
                 mousePos = pygame.mouse.get_pos()
                 if playBtnRect.collidepoint(mousePos):
-                    f = tkinter.filedialog.askopenfilename(title = "Select a song to play...", initialdir=MUSIC_FOLDER)
+
+                    f = open_file_dialog(title = "Select a song to play...", initialdir=MUSIC_FOLDER)
                     if f == "" or f == None:
                         pass
                     else:
@@ -193,26 +195,35 @@ def analyze(f):
     print("Loading analyzer...")
     from entities import AudioAnalyzer
     audioObj = AudioAnalyzer(f)
-    duration, songName = audioObj.loadIntoLibrosa()
+    print("load into librosa")
+    duration, songName, filepath = audioObj.loadIntoLibrosa()
+    print("detecting notes")
     noteStartList = audioObj.detectNotes()
+    print("detecting small notes")
     smallNoteStartList = audioObj.detectSmallNotes()
+    print("detecting finished!")
 
     # chorus detection feature will be implemented in the future
     chorusStartTime = None
     
-    audioObj.createPygameMixerObj()
+    # print("creating mixer object")
+    # audioObj.createPygameMixerObj()
     bpm = audioObj.calcBPM()
 
-    return duration, songName, noteStartList, smallNoteStartList, chorusStartTime, bpm
+    print("analyzation finished!")
 
-def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm):
+    return duration, songName, noteStartList, smallNoteStartList, chorusStartTime, bpm, filepath
+
+def session(f, duration, songName, noteStartList, smallNoteStartList, _, bpm, filepath):
     print("Loading constants...")
     from common import WIN_W, WIN_H, PAD_Y_POS, SPEED_MULTIPLIER, FONT, FONT2, LOADING_ICON, PAUSE_BACKGROUND, BACKGROUND_IMAGE, FPS, WHITE_TEXT
     print("Loading entities...")
     from entities import LargeNote, SmallNote, PauseMenu, PauseCountdown, Pad, Effect, ScoreDisp
 
     pygame.mixer.init()
-    pygame.mixer.music.load("temp2.wav")
+    pygame.mixer.music.load(filepath)
+    pygame.mixer.music.play()
+    # pygame.mixer.music.load("temp2.wav")
     # create pygame window
     display = pygame.display.set_mode((WIN_W, WIN_H), pygame.HWSURFACE)
 
@@ -510,8 +521,8 @@ if __name__ == "__main__":
         f, part = mainMenu()
         if part == Part.Play:
             while True:
-                d, name, n, sn, cst, bpm = analyze(f)
-                r, sn, ln, scr = session(f, d, name, n, sn, cst, bpm)
+                d, name, n, sn, cst, bpm, filepath = analyze(f)
+                r, sn, ln, scr = session(f, d, name, n, sn, cst, bpm, filepath)
                 cleanup("temp.wav")
                 cleanup("temp2.wav")
                 if r == ExitReason.Exit:         

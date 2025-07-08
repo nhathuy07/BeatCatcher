@@ -15,6 +15,7 @@ import pygame.font
 import pygame.transform
 import pygame.display
 import os
+# import platform
 pygame.init()
 pygame.display.init()
 
@@ -24,23 +25,26 @@ class AudioAnalyzer():
         self.noteStartList = []
         self.smallNotesList = []
     def loadIntoLibrosa(self):
+        # print("step1")
         # song name
         self.songName = os.path.basename(self.fileName)
         # convert if not wav
         if not self.fileName.endswith(".wav"):
-            subprocess.run(args=['./ffmpeg.exe', '-i', self.fileName, "temp.wav"])
-            self.fileName = os.path.join("temp.wav")
+            subprocess.run(args=['ffmpeg', '-i', self.fileName, f"{self.songName}.wav"])
+            self.fileName = os.path.join(f"{self.songName}.wav")
 
         # append file:
-        concatenateAudio(["assets/blank.wav", self.fileName])
-        cleanup("temp.wav")
-        self.fileName = "temp2.wav"
+        # concatenateAudio(["assets/blank.wav", self.fileName])
+        cleanup(f"{self.songName}.wav")
+        # self.fileName = "temp2.wav"
         # load into librosa
+        print(self.fileName)
         self.soundData, self.sampleRate = librosa.load(self.fileName)
+        print('load_complete')
         self.duration = librosa.get_duration(y = self.soundData, sr = self.sampleRate)
         self.oenv = librosa.onset.onset_strength(y=self.soundData, sr=self.sampleRate)
 
-        return self.duration, self.songName
+        return self.duration, self.songName, self.fileName
     def calcBPM(self):
         bpm = float(librosa.beat.tempo(y=self.soundData, sr=self.sampleRate))
         return bpm
@@ -57,7 +61,9 @@ class AudioAnalyzer():
         return self.noteStartList
     
     def detectSmallNotes(self):
+        print("obtaining track BPM")
         bpm = self.calcBPM()
+        print("obtained track BPM")
         noteLength = 15/bpm
         smallNotesList= [] 
         for i in range(len(self.noteStartList) - 1):
